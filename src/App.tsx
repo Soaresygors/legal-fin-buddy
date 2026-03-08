@@ -14,6 +14,7 @@ import ContasPagarPage from "./pages/ContasPagarPage";
 import DREPage from "./pages/DREPage";
 import CadastrosPage from "./pages/CadastrosPage";
 import ImportacaoPage from "./pages/ImportacaoPage";
+import PlanilhasModeloPage from "./pages/PlanilhasModeloPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
