@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useYear } from '@/contexts/YearContext';
 import { formatCurrency, getMonthName } from '@/lib/format';
+import { getCompetenciaMonth, toSafeNumber } from '@/lib/financial';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 type RowStyle = 'section' | 'subtotal' | 'total' | 'total-green' | 'total-red' | 'saldo-pos' | 'saldo-neg' | 'normal' | 'editable';
@@ -113,24 +114,29 @@ export default function FluxoCaixaPage() {
   useEffect(() => {
     async function load() {
       setLoading(true);
-      const { data } = await supabase
-        .from('lancamentos')
-        .select('valor_realizado, competencia, plano_contas!inner(codigo)')
-        .gte('competencia', `${selectedYear}-01-01`)
-        .lte('competencia', `${selectedYear}-12-31`);
+      try {
+        const { data } = await supabase
+          .from('lancamentos')
+          .select('valor_realizado, competencia, plano_contas!inner(codigo)')
+          .gte('competencia', `${selectedYear}-01-01`)
+          .lte('competencia', `${selectedYear}-12-31`);
 
-      const g: Record<string, Record<number, number>> = {};
-      (data || []).forEach((l: any) => {
-        const code = l.plano_contas?.codigo || '';
-        const month = new Date(l.competencia + 'T00:00:00').getMonth() + 1;
-        const val = Number(l.valor_realizado) || 0;
-        if (!g[code]) g[code] = {};
-        g[code][month] = (g[code][month] || 0) + val;
-      });
+        const g: Record<string, Record<number, number>> = {};
+        (data || []).forEach((l: any) => {
+          const code = l.plano_contas?.codigo || '';
+          const month = getCompetenciaMonth(l.competencia);
+          if (!month) return;
 
-      setGrouped(g);
-      buildRows(g, saldoInicialJan);
-      setLoading(false);
+          const val = toSafeNumber(l.valor_realizado);
+          if (!g[code]) g[code] = {};
+          g[code][month] = (g[code][month] || 0) + val;
+        });
+
+        setGrouped(g);
+        buildRows(g, saldoInicialJan);
+      } finally {
+        setLoading(false);
+      }
     }
     load();
   }, [selectedYear, buildRows, saldoInicialJan]);

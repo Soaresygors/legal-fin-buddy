@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useYear } from '@/contexts/YearContext';
 import { formatCurrency, getMonthName } from '@/lib/format';
+import { getCompetenciaMonth, toSafeNumber } from '@/lib/financial';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileDown } from 'lucide-react';
@@ -71,22 +72,24 @@ export default function DREPage() {
   useEffect(() => {
     async function load() {
       setLoading(true);
-
-      const { data } = await supabase
-        .from('lancamentos')
-        .select('valor_realizado, competencia, plano_contas!inner(codigo, grupo)')
-        .gte('competencia', `${selectedYear}-01-01`)
-        .lte('competencia', `${selectedYear}-12-31`);
+      try {
+        const { data } = await supabase
+          .from('lancamentos')
+          .select('valor_realizado, competencia, plano_contas!inner(codigo, grupo)')
+          .gte('competencia', `${selectedYear}-01-01`)
+          .lte('competencia', `${selectedYear}-12-31`);
 
       // Group by codigo -> month -> sum
-      const grouped: Record<string, Record<number, number>> = {};
-      (data || []).forEach((l: any) => {
-        const code = l.plano_contas?.codigo || '';
-        const month = new Date(l.competencia + 'T00:00:00').getMonth() + 1;
-        const val = Number(l.valor_realizado) || 0;
-        if (!grouped[code]) grouped[code] = {};
-        grouped[code][month] = (grouped[code][month] || 0) + val;
-      });
+        const grouped: Record<string, Record<number, number>> = {};
+        (data || []).forEach((l: any) => {
+          const code = l.plano_contas?.codigo || '';
+          const month = getCompetenciaMonth(l.competencia);
+          if (!month) return;
+
+          const val = toSafeNumber(l.valor_realizado);
+          if (!grouped[code]) grouped[code] = {};
+          grouped[code][month] = (grouped[code][month] || 0) + val;
+        });
 
       // 1. RECEITA BRUTA
       const honContratuais = lineFromCodes('Honorários Contratuais', grouped, ['1.1'], 'normal', 1);
@@ -229,7 +232,7 @@ export default function DREPage() {
       const saldoFinalTotal = sumAllMonths(saldoFinalMonths);
       const totalSaldoFinal = makeRow('SALDO FINAL', saldoFinalMonths, saldoFinalTotal >= 0 ? 'result-positive' : 'result-negative');
 
-      setRows([
+        setRows([
         makeRow('1. RECEITA BRUTA', [], 'section'),
         honContratuais, honExito, honRecorrentes, consultorias, arbitragem, recuperacao, reembolsos, recJudiciais, outrasRec, rendaPatrimonial,
         subtRecBruta,
@@ -287,9 +290,10 @@ export default function DREPage() {
         subtInvest,
 
         totalSaldoFinal,
-      ]);
-
-      setLoading(false);
+        ]);
+      } finally {
+        setLoading(false);
+      }
     }
     load();
   }, [selectedYear]);

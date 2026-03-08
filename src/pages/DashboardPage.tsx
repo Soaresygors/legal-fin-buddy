@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useYear } from '@/contexts/YearContext';
 import { formatCurrency, getMonthName } from '@/lib/format';
+import { getCompetenciaMonth, toSafeNumber } from '@/lib/financial';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -87,7 +88,8 @@ export default function DashboardPage() {
     async function load() {
       setLoading(true);
 
-      const now = new Date();
+      try {
+        const now = new Date();
       // If viewing current year, use current month. Otherwise use December (full year).
       const mesAtual = selectedYear === now.getFullYear() ? now.getMonth() + 1 : 12;
 
@@ -121,7 +123,7 @@ export default function DashboardPage() {
         .select('valor_original, desconto, juros_multa, valor_pago')
         .in('status', ['Pendente', 'Vencido']);
 
-      if (!lancamentos) { setLoading(false); return; }
+      if (!lancamentos) return;
 
       // Monthly aggregation (all 12 months)
       const monthly: Record<number, { receitas: number; despesas: number }> = {};
@@ -141,8 +143,11 @@ export default function DashboardPage() {
       const clienteMap: Record<string, { nome: string; total: number }> = {};
 
       lancamentos.forEach((l: any) => {
-        const m = new Date(l.competencia).getMonth();
-        const val = Number(l.valor_realizado) || 0;
+        const month = getCompetenciaMonth(l.competencia);
+        if (!month) return;
+
+        const m = month - 1;
+        const val = toSafeNumber(l.valor_realizado);
         const codigo = l.plano_contas?.codigo || '';
         const grupo = l.plano_contas?.grupo || '';
 
@@ -177,7 +182,7 @@ export default function DashboardPage() {
       const saldoInicial = (bancos || []).reduce((s, b) => s + (Number(b.saldo_inicial) || 0), 0);
       let totalRecPago = 0, totalDesPago = 0;
       (allLanc || []).forEach((l: any) => {
-        const val = Number(l.valor_realizado) || 0;
+        const val = toSafeNumber(l.valor_realizado);
         if (l.tipo === 'R') totalRecPago += val;
         else totalDesPago += val;
       });
@@ -195,7 +200,7 @@ export default function DashboardPage() {
       let lancPendR = 0, lancPendD = 0;
       lancamentos.forEach((l: any) => {
         if (l.status === 'Pendente') {
-          const val = Number(l.valor_realizado) || 0;
+          const val = toSafeNumber(l.valor_realizado);
           if (l.tipo === 'R') lancPendR += val;
           else lancPendD += val;
         }
@@ -240,7 +245,9 @@ export default function DashboardPage() {
           }))
       );
 
-      setLoading(false);
+      } finally {
+        setLoading(false);
+      }
     }
     load();
   }, [selectedYear]);

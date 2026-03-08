@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useYear } from '@/contexts/YearContext';
 import { formatCurrency, getMonthName } from '@/lib/format';
+import { getCompetenciaMonth, toSafeNumber } from '@/lib/financial';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -79,7 +80,8 @@ export default function IndicadoresPage() {
     async function load() {
       setLoading(true);
 
-      const [lancRes, crRes, cpRes] = await Promise.all([
+      try {
+        const [lancRes, crRes, cpRes] = await Promise.all([
         supabase
           .from('lancamentos')
           .select('valor_realizado, competencia, plano_contas!inner(codigo)')
@@ -95,14 +97,16 @@ export default function IndicadoresPage() {
           .in('status', ['Pendente', 'Vencido']),
       ]);
 
-      const grouped: Record<string, Record<number, number>> = {};
-      (lancRes.data || []).forEach((l: any) => {
-        const code = l.plano_contas?.codigo || '';
-        const month = new Date(l.competencia + 'T00:00:00').getMonth() + 1;
-        const val = Number(l.valor_realizado) || 0;
-        if (!grouped[code]) grouped[code] = {};
-        grouped[code][month] = (grouped[code][month] || 0) + val;
-      });
+        const grouped: Record<string, Record<number, number>> = {};
+        (lancRes.data || []).forEach((l: any) => {
+          const code = l.plano_contas?.codigo || '';
+          const month = getCompetenciaMonth(l.competencia);
+          if (!month) return;
+
+          const val = toSafeNumber(l.valor_realizado);
+          if (!grouped[code]) grouped[code] = {};
+          grouped[code][month] = (grouped[code][month] || 0) + val;
+        });
 
       const now = new Date();
       const mesAtual = selectedYear === now.getFullYear() ? now.getMonth() + 1 : 12;
@@ -174,7 +178,9 @@ export default function IndicadoresPage() {
           return { m: getMonthName(i), v: rec - desp };
         }),
       });
-      setLoading(false);
+      } finally {
+        setLoading(false);
+      }
     }
     load();
   }, [selectedYear]);
