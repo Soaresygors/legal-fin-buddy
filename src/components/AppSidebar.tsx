@@ -60,12 +60,12 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
       >
         {/* Logo */}
         <div className="flex items-center justify-between px-5 py-5 border-b border-sidebar-border">
-          <div className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <Scale className="h-6 w-6 text-sidebar-active" />
             <span className="text-lg font-bold tracking-tight text-sidebar-foreground">
               P&B Advogadas
             </span>
-          </div>
+          </Link>
           <button onClick={onToggle} className="lg:hidden text-sidebar-muted hover:text-sidebar-foreground">
             <X className="h-5 w-5" />
           </button>

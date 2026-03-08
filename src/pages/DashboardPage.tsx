@@ -88,7 +88,8 @@ export default function DashboardPage() {
       setLoading(true);
 
       const now = new Date();
-      const mesAtual = now.getMonth() + 1; // 1-12
+      // If viewing current year, use current month. Otherwise use December (full year).
+      const mesAtual = selectedYear === now.getFullYear() ? now.getMonth() + 1 : 12;
 
       // 1) All lancamentos for selectedYear
       const { data: lancamentos } = await supabase
@@ -245,7 +246,16 @@ export default function DashboardPage() {
   }, [selectedYear]);
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64 text-muted-foreground">Carregando...</div>;
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          {[1,2,3,4,5].map(i => <div key={i} className="h-24 rounded-xl bg-muted animate-pulse" />)}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {[1,2].map(i => <div key={i} className="h-80 rounded-xl bg-muted animate-pulse" />)}
+        </div>
+      </div>
+    );
   }
 
   const variacao = kpis.receitaMesAnterior > 0
