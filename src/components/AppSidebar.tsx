@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, FileText, ArrowDownCircle, ArrowUpCircle,
   TrendingUp, BarChart3, PieChart, Users, Settings,
-  ChevronDown, Scale, Menu, X
+  ChevronDown, Scale, Menu, X, FileSpreadsheet
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -124,6 +124,20 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
               ))}
             </div>
           )}
+
+          <Link
+            to="/admin/planilhas"
+            onClick={() => window.innerWidth < 1024 && onToggle()}
+            className={cn(
+              "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors mb-0.5",
+              isActive('/admin/planilhas')
+                ? "bg-sidebar-active text-sidebar-foreground"
+                : "text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground"
+            )}
+          >
+            <FileSpreadsheet className="h-4.5 w-4.5 shrink-0" />
+            Planilhas Modelo
+          </Link>
 
           <Link
             to="/configuracoes"
