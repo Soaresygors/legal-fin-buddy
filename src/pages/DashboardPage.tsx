@@ -19,6 +19,14 @@ interface MonthlyData {
   despesas: number;
   resultado: number;
 }
+const PIE_COLORS: Record<string, string> = {
+  'Pessoal': '#1F3864',
+  'Administrativo': '#2E75B6',
+  'Impostos': '#f59e0b',
+  'Operacional': '#10b981',
+  'Marketing': '#a855f7',
+  'Outros': '#94a3b8',
+};
 
 const STATUS_BADGE: Record<string, string> = {
   Pago: 'bg-[#DCFCE7] text-[#166534]',
