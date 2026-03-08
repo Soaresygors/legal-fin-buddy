@@ -29,8 +29,9 @@ import { CurrencyInput } from '@/components/CurrencyInput';
 import { cn } from '@/lib/utils';
 import {
   Plus, Pencil, Trash2, CalendarIcon, ArrowDownToLine, ArrowUpFromLine,
-  ChevronUp, ChevronDown, Loader2, X, Search,
+  ChevronUp, ChevronDown, Loader2, X, Search, Info,
 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 // Types
 interface Lancamento {
