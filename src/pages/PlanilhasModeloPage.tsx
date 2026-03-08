@@ -16,50 +16,10 @@ interface TemplateInfo {
 
 const templates: TemplateInfo[] = [
   {
-    id: 'socios',
-    nome: 'Sócios',
-    descricao: 'Cadastro dos sócios do escritório',
-    ordemImportacao: 1,
-    colunas: [
-      { nome: 'nome', obrigatoria: true, exemplo: 'João Silva' },
-      { nome: 'oab', obrigatoria: false, exemplo: 'OAB/SP 123456' },
-      { nome: 'area_principal', obrigatoria: false, exemplo: 'Cível' },
-      { nome: 'participacao', obrigatoria: false, exemplo: '50', obs: 'Percentual (0-100)' },
-      { nome: 'ativo', obrigatoria: false, exemplo: 'true', obs: 'true ou false' },
-    ],
-  },
-  {
-    id: 'centros_custo',
-    nome: 'Centros de Custo',
-    descricao: 'Centros de custo para classificação',
-    ordemImportacao: 2,
-    colunas: [
-      { nome: 'codigo', obrigatoria: false, exemplo: 'CC001' },
-      { nome: 'nome', obrigatoria: true, exemplo: 'Administrativo' },
-      { nome: 'descricao', obrigatoria: false, exemplo: 'Custos administrativos gerais' },
-      { nome: 'responsavel', obrigatoria: false, exemplo: 'Maria Santos' },
-      { nome: 'ativo', obrigatoria: false, exemplo: 'true' },
-    ],
-  },
-  {
-    id: 'contas_bancarias',
-    nome: 'Contas Bancárias',
-    descricao: 'Contas bancárias do escritório',
-    ordemImportacao: 3,
-    colunas: [
-      { nome: 'banco', obrigatoria: true, exemplo: 'Banco do Brasil' },
-      { nome: 'agencia', obrigatoria: false, exemplo: '1234-5' },
-      { nome: 'conta', obrigatoria: false, exemplo: '12345-6' },
-      { nome: 'tipo', obrigatoria: false, exemplo: 'Corrente', obs: 'Corrente, Poupança, etc.' },
-      { nome: 'saldo_inicial', obrigatoria: false, exemplo: '10000.00' },
-      { nome: 'ativa', obrigatoria: false, exemplo: 'true' },
-    ],
-  },
-  {
     id: 'plano_contas',
     nome: 'Plano de Contas',
     descricao: 'Plano de contas contábil (receitas e despesas)',
-    ordemImportacao: 4,
+    ordemImportacao: 1,
     colunas: [
       { nome: 'codigo', obrigatoria: true, exemplo: '1.1' },
       { nome: 'descricao', obrigatoria: true, exemplo: 'Honorários Contratuais' },
@@ -74,7 +34,7 @@ const templates: TemplateInfo[] = [
     id: 'clientes',
     nome: 'Clientes',
     descricao: 'Cadastro de clientes do escritório',
-    ordemImportacao: 5,
+    ordemImportacao: 2,
     colunas: [
       { nome: 'nome', obrigatoria: true, exemplo: 'Empresa ABC Ltda' },
       { nome: 'cpf_cnpj', obrigatoria: false, exemplo: '12.345.678/0001-99' },
@@ -90,7 +50,7 @@ const templates: TemplateInfo[] = [
     id: 'lancamentos',
     nome: 'Lançamentos',
     descricao: 'Lançamentos financeiros (receitas e despesas)',
-    ordemImportacao: 6,
+    ordemImportacao: 3,
     colunas: [
       { nome: 'tipo', obrigatoria: true, exemplo: 'R', obs: 'R = Receita, D = Despesa' },
       { nome: 'descricao', obrigatoria: true, exemplo: 'Honorários cliente ABC - Jan/2025' },
@@ -110,7 +70,6 @@ const templates: TemplateInfo[] = [
     ],
   },
 ];
-
 function generateCSV(template: TemplateInfo): string {
   const header = template.colunas.map(c => c.nome).join(';');
   const example = template.colunas.map(c => c.exemplo).join(';');
@@ -162,7 +121,7 @@ export default function PlanilhasModeloPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground space-y-2">
-          <p>1. Baixe os modelos CSV na <strong>ordem indicada</strong> (sócios → centros de custo → contas bancárias → plano de contas → clientes → lançamentos).</p>
+          <p>1. Baixe os modelos CSV na <strong>ordem indicada</strong> (plano de contas → clientes → lançamentos).</p>
           <p>2. Preencha cada planilha usando <strong>ponto-e-vírgula (;)</strong> como separador.</p>
           <p>3. Valores numéricos devem usar <strong>ponto</strong> como separador decimal (ex: 5000.00).</p>
           <p>4. Datas no formato <strong>AAAA-MM-DD</strong> (ex: 2025-01-15).</p>
