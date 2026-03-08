@@ -114,10 +114,19 @@ export async function importClientes(rows: Record<string, string>[]): Promise<Im
   return result;
 }
 
-export async function importLancamentos(rows: Record<string, string>[]): Promise<ImportResult> {
+export async function importLancamentos(rows: Record<string, string>[], csvText?: string): Promise<ImportResult> {
+  // Use edge function for bulk import if csvText is provided
+  if (csvText) {
+    const { data, error } = await supabase.functions.invoke('import-lancamentos', {
+      body: { csvText },
+    });
+    if (error) throw new Error(error.message);
+    return { success: data.success, errors: data.errors ?? [] };
+  }
+
+  // Fallback: row-by-row import
   const result: ImportResult = { success: 0, errors: [] };
 
-  // Pre-fetch lookup tables
   const [contasRes, clientesRes, sociosRes, centrosRes] = await Promise.all([
     supabase.from('plano_contas').select('id, codigo'),
     supabase.from('clientes').select('id, nome'),
