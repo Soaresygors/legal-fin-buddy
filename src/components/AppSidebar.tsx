@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, FileText, TrendingUp, TrendingDown,
   Upload, BarChart2, Settings,
-  ChevronDown, Scale, X, LogOut,
+  ChevronDown, Scale, X, LogOut, FileSpreadsheet,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,6 +14,7 @@ const mainNav = [
   { label: 'Contas a Receber', icon: TrendingUp, path: '/contas-receber' },
   { label: 'Contas a Pagar', icon: TrendingDown, path: '/contas-pagar' },
   { label: 'Importação', icon: Upload, path: '/importacao' },
+  { label: 'Planilhas Modelo', icon: FileSpreadsheet, path: '/planilhas-modelo' },
   { label: 'DRE', icon: BarChart2, path: '/dre' },
 ];
 
