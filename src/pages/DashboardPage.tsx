@@ -88,7 +88,8 @@ export default function DashboardPage() {
       setLoading(true);
 
       const now = new Date();
-      const mesAtual = now.getMonth() + 1; // 1-12
+      // If viewing current year, use current month. Otherwise use December (full year).
+      const mesAtual = selectedYear === now.getFullYear() ? now.getMonth() + 1 : 12;
 
       // 1) All lancamentos for selectedYear
       const { data: lancamentos } = await supabase
