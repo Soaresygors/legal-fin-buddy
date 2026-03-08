@@ -21,6 +21,8 @@ const cadastroNav = [
   { label: 'Clientes', path: '/cadastros/clientes' },
   { label: 'Plano de Contas', path: '/cadastros/plano-contas' },
   { label: 'Centros de Custo', path: '/cadastros/centros-custo' },
+  { label: 'Sócios', path: '/cadastros/socios' },
+  { label: 'Contas Bancárias', path: '/cadastros/contas-bancarias' },
 ];
 
 interface AppSidebarProps {
