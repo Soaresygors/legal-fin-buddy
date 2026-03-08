@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface CurrencyInputProps {
   value: number | null;
@@ -9,6 +9,10 @@ interface CurrencyInputProps {
 }
 
 export function CurrencyInput({ value, onChange, placeholder = 'R$ 0,00', className = '', required }: CurrencyInputProps) {
+  function formatForDisplay(val: number): string {
+    return val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
   const [display, setDisplay] = useState(() => {
     if (value !== null && value !== undefined) {
       return formatForDisplay(value);
@@ -16,9 +20,14 @@ export function CurrencyInput({ value, onChange, placeholder = 'R$ 0,00', classN
     return '';
   });
 
-  function formatForDisplay(val: number): string {
-    return val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }
+  // Sync display when value changes externally (e.g. opening edit form)
+  useEffect(() => {
+    if (value !== null && value !== undefined) {
+      setDisplay(formatForDisplay(value));
+    } else {
+      setDisplay('');
+    }
+  }, [value]);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const raw = e.target.value.replace(/[^\d]/g, '');
