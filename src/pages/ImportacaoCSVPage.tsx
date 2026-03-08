@@ -69,8 +69,13 @@ export default function ImportacaoCSVPage() {
     setResult(null);
 
     try {
-      const importer = importerMap[entityType];
-      const res = await importer(rows);
+      let res: ImportResult;
+      if (entityType === 'lancamentos') {
+        res = await importLancamentos(rows, rawCsvText);
+      } else {
+        const importer = importerMap[entityType];
+        res = await importer(rows);
+      }
       setResult(res);
 
       if (res.errors.length === 0) {
