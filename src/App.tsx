@@ -59,6 +59,7 @@ const App = () => (
                   <Route path="/cadastros/contas-bancarias" element={<CadastrosPage />} />
                   <Route path="/configuracoes" element={<ConfiguracoesPage />} />
                   <Route path="/admin/migracao" element={<MigracaoPage />} />
+                  <Route path="/admin/planilhas" element={<PlanilhasModeloPage />} />
                 </Route>
               </Route>
               <Route path="*" element={<NotFound />} />
