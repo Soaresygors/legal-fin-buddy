@@ -22,6 +22,7 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
 import MigracaoPage from "./pages/MigracaoPage";
+import PlanilhasModeloPage from "./pages/PlanilhasModeloPage";
 
 const queryClient = new QueryClient();
 
