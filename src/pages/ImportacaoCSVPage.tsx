@@ -52,6 +52,7 @@ export default function ImportacaoCSVPage() {
     setFile(f);
 
     const text = await f.text();
+    setRawCsvText(text);
     const parsed = parseCSV(text);
     setRows(parsed);
 
