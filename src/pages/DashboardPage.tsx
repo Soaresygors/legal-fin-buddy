@@ -97,20 +97,10 @@ export default function DashboardPage() {
       const hasData = lancamentos && lancamentos.length > 0;
 
       if (!hasData) {
-        // Use demo data
-        setMonthlyData(DEMO_MONTHLY);
-        const totalRec = DEMO_MONTHLY.reduce((s, m) => s + m.receitas, 0);
-        const totalDesp = DEMO_MONTHLY.reduce((s, m) => s + m.despesas, 0);
-        const resultado = totalRec - totalDesp;
-        setKpis({
-          receitaTotal: totalRec,
-          despesaTotal: totalDesp,
-          resultado,
-          margem: totalRec > 0 ? (resultado / totalRec) * 100 : 0,
-          variacaoReceita: 8.2,
-        });
-        setDespesasPie(DEMO_PIE);
-        setUltimosLancamentos(DEMO_LANCAMENTOS);
+        setMonthlyData([]);
+        setKpis({ receitaTotal: 0, despesaTotal: 0, resultado: 0, margem: 0, variacaoReceita: null });
+        setDespesasPie([]);
+        setUltimosLancamentos([]);
         setLoading(false);
         return;
       }
