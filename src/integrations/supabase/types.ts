@@ -518,7 +518,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      verificar_migracao_por_ano: {
+        Args: never
+        Returns: {
+          ano: number
+          despesas: number
+          qtd: number
+          receitas: number
+          resultado: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
