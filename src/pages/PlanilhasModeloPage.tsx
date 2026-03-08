@@ -121,7 +121,7 @@ export default function PlanilhasModeloPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground space-y-2">
-          <p>1. Baixe os modelos CSV na <strong>ordem indicada</strong> (sócios → centros de custo → contas bancárias → plano de contas → clientes → lançamentos).</p>
+          <p>1. Baixe os modelos CSV na <strong>ordem indicada</strong> (plano de contas → clientes → lançamentos).</p>
           <p>2. Preencha cada planilha usando <strong>ponto-e-vírgula (;)</strong> como separador.</p>
           <p>3. Valores numéricos devem usar <strong>ponto</strong> como separador decimal (ex: 5000.00).</p>
           <p>4. Datas no formato <strong>AAAA-MM-DD</strong> (ex: 2025-01-15).</p>
