@@ -39,14 +39,14 @@ function makeRow(label: string, months: number[], style: RowStyle, indent?: numb
   return { label, months, total: sumAllMonths(months), style, indent };
 }
 
-function lineFromPrefixes(
+function lineFromCodes(
   label: string,
   grouped: Record<string, Record<number, number>>,
-  prefixes: string[],
+  codes: string[],
   style: RowStyle = 'normal',
   indent?: number
 ): DRERow {
-  const months = Array.from({ length: 12 }, (_, i) => sumByPrefixes(grouped, prefixes, i + 1));
+  const months = Array.from({ length: 12 }, (_, i) => sumByCodes(grouped, codes, i + 1));
   return makeRow(label, months, style, indent);
 }
 
