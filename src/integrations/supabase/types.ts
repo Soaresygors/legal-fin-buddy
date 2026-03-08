@@ -453,6 +453,39 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          ativo: boolean | null
+          avatar_url: string | null
+          cargo: string | null
+          created_at: string | null
+          email: string
+          id: string
+          nome: string
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          avatar_url?: string | null
+          cargo?: string | null
+          created_at?: string | null
+          email: string
+          id: string
+          nome: string
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          avatar_url?: string | null
+          cargo?: string | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          nome?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       socios: {
         Row: {
           area_principal: string | null
