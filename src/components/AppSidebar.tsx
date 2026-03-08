@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, FileText, TrendingUp, TrendingDown,
   Upload, BarChart2, Settings,
-  ChevronDown, Scale, X, LogOut,
+  ChevronDown, Scale, X, LogOut, FileSpreadsheet,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
