@@ -23,6 +23,7 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
 import MigracaoPage from "./pages/MigracaoPage";
 import PlanilhasModeloPage from "./pages/PlanilhasModeloPage";
+import ImportacaoCSVPage from "./pages/ImportacaoCSVPage";
 
 const queryClient = new QueryClient();
 
@@ -60,6 +61,7 @@ const App = () => (
                   <Route path="/configuracoes" element={<ConfiguracoesPage />} />
                   <Route path="/admin/migracao" element={<MigracaoPage />} />
                   <Route path="/admin/planilhas" element={<PlanilhasModeloPage />} />
+                  <Route path="/admin/importacao" element={<ImportacaoCSVPage />} />
                 </Route>
               </Route>
               <Route path="*" element={<NotFound />} />
