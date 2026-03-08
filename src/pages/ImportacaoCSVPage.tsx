@@ -37,6 +37,7 @@ const importerMap: Record<EntityType, (rows: Record<string, string>[]) => Promis
 export default function ImportacaoCSVPage() {
   const [entityType, setEntityType] = useState<EntityType>('socios');
   const [file, setFile] = useState<File | null>(null);
+  const [rawCsvText, setRawCsvText] = useState<string>('');
   const [rows, setRows] = useState<Record<string, string>[]>([]);
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
@@ -51,6 +52,7 @@ export default function ImportacaoCSVPage() {
     setFile(f);
 
     const text = await f.text();
+    setRawCsvText(text);
     const parsed = parseCSV(text);
     setRows(parsed);
 
@@ -67,8 +69,13 @@ export default function ImportacaoCSVPage() {
     setResult(null);
 
     try {
-      const importer = importerMap[entityType];
-      const res = await importer(rows);
+      let res: ImportResult;
+      if (entityType === 'lancamentos') {
+        res = await importLancamentos(rows, rawCsvText);
+      } else {
+        const importer = importerMap[entityType];
+        res = await importer(rows);
+      }
       setResult(res);
 
       if (res.errors.length === 0) {
@@ -87,6 +94,7 @@ export default function ImportacaoCSVPage() {
 
   function handleReset() {
     setFile(null);
+    setRawCsvText('');
     setRows([]);
     setResult(null);
     if (fileRef.current) fileRef.current.value = '';
