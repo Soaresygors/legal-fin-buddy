@@ -94,6 +94,7 @@ export default function ImportacaoCSVPage() {
 
   function handleReset() {
     setFile(null);
+    setRawCsvText('');
     setRows([]);
     setResult(null);
     if (fileRef.current) fileRef.current.value = '';
