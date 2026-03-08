@@ -52,7 +52,7 @@ export default function MigracaoPage() {
       const [lancRes, cliRes, anoRes, topRes] = await Promise.all([
         supabase.from('lancamentos').select('*', { count: 'exact', head: true }).eq('observacoes', 'Migrado da planilha'),
         supabase.from('clientes').select('*', { count: 'exact', head: true }).eq('observacoes', 'Importado da planilha'),
-        supabase.rpc('verificar_migracao_por_ano'),
+        (supabase.rpc as any)('verificar_migracao_por_ano'),
         supabase.from('lancamentos')
           .select('conta_id, valor_realizado, plano_contas(codigo, descricao)')
           .eq('observacoes', 'Migrado da planilha'),
