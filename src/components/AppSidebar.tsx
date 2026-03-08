@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, FileText, ArrowDownCircle, ArrowUpCircle,
   TrendingUp, BarChart3, PieChart, Users, Settings,
-  ChevronDown, Scale, Menu, X, FileSpreadsheet
+  ChevronDown, Scale, Menu, X, FileSpreadsheet, Upload
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
