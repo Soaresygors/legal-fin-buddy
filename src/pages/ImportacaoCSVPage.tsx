@@ -37,6 +37,7 @@ const importerMap: Record<EntityType, (rows: Record<string, string>[]) => Promis
 export default function ImportacaoCSVPage() {
   const [entityType, setEntityType] = useState<EntityType>('socios');
   const [file, setFile] = useState<File | null>(null);
+  const [rawCsvText, setRawCsvText] = useState<string>('');
   const [rows, setRows] = useState<Record<string, string>[]>([]);
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
