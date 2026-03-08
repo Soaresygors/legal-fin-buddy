@@ -11,9 +11,11 @@ const pageTitles: Record<string, string> = {
   '/fluxo-caixa': 'Fluxo de Caixa',
   '/dre': 'DRE - Demonstrativo de Resultados',
   '/indicadores': 'Indicadores',
-  '/cadastros/clientes': 'Clientes',
-  '/cadastros/plano-contas': 'Plano de Contas',
-  '/cadastros/centros-custo': 'Centros de Custo',
+  '/cadastros/clientes': 'Cadastros',
+  '/cadastros/plano-contas': 'Cadastros',
+  '/cadastros/centros-custo': 'Cadastros',
+  '/cadastros/socios': 'Cadastros',
+  '/cadastros/contas-bancarias': 'Cadastros',
   '/configuracoes': 'Configurações',
 };
 
