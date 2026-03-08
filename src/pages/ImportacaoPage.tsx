@@ -189,13 +189,13 @@ export default function ImportacaoPage() {
           if (existing && existing.length > 0) {
             skipped++;
           } else {
-            const { error } = await supabase.from('lancamentos').insert(record);
+        const { error } = await supabase.from('lancamentos').insert(record as any);
             if (error) errors++;
             else imported++;
           }
         }
       } else {
-        const { error } = await supabase.from('lancamentos').insert(validRecords);
+        const { error } = await supabase.from('lancamentos').insert(validRecords as any);
         if (error) errors += validRecords.length;
         else imported += validRecords.length;
       }
