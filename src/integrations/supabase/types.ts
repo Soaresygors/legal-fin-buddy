@@ -14,7 +14,472 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      centros_custo: {
+        Row: {
+          ativo: boolean | null
+          codigo: string | null
+          descricao: string | null
+          id: string
+          nome: string
+          responsavel: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          codigo?: string | null
+          descricao?: string | null
+          id?: string
+          nome: string
+          responsavel?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          codigo?: string | null
+          descricao?: string | null
+          id?: string
+          nome?: string
+          responsavel?: string | null
+        }
+        Relationships: []
+      }
+      clientes: {
+        Row: {
+          area_juridica: string | null
+          cpf_cnpj: string | null
+          created_at: string | null
+          data_cadastro: string | null
+          email: string | null
+          id: string
+          nome: string
+          observacoes: string | null
+          socio_id: string | null
+          status: string | null
+          telefone: string | null
+          tipo_pf_pj: string | null
+        }
+        Insert: {
+          area_juridica?: string | null
+          cpf_cnpj?: string | null
+          created_at?: string | null
+          data_cadastro?: string | null
+          email?: string | null
+          id?: string
+          nome: string
+          observacoes?: string | null
+          socio_id?: string | null
+          status?: string | null
+          telefone?: string | null
+          tipo_pf_pj?: string | null
+        }
+        Update: {
+          area_juridica?: string | null
+          cpf_cnpj?: string | null
+          created_at?: string | null
+          data_cadastro?: string | null
+          email?: string | null
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          socio_id?: string | null
+          status?: string | null
+          telefone?: string | null
+          tipo_pf_pj?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clientes_socio_id_fkey"
+            columns: ["socio_id"]
+            isOneToOne: false
+            referencedRelation: "socios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contas_bancarias: {
+        Row: {
+          agencia: string | null
+          ativa: boolean | null
+          banco: string
+          conta: string | null
+          id: string
+          saldo_inicial: number | null
+          tipo: string | null
+        }
+        Insert: {
+          agencia?: string | null
+          ativa?: boolean | null
+          banco: string
+          conta?: string | null
+          id?: string
+          saldo_inicial?: number | null
+          tipo?: string | null
+        }
+        Update: {
+          agencia?: string | null
+          ativa?: boolean | null
+          banco?: string
+          conta?: string | null
+          id?: string
+          saldo_inicial?: number | null
+          tipo?: string | null
+        }
+        Relationships: []
+      }
+      contas_pagar: {
+        Row: {
+          centro_custo_id: string | null
+          competencia: string | null
+          conta_bancaria_id: string | null
+          conta_id: string | null
+          created_at: string | null
+          data_emissao: string | null
+          data_pagamento: string | null
+          data_vencimento: string
+          desconto: number | null
+          descricao: string | null
+          forma_pagamento: string | null
+          fornecedor: string | null
+          id: string
+          juros_multa: number | null
+          num_documento: string | null
+          recorrente: boolean | null
+          status: string | null
+          valor_original: number
+          valor_pago: number | null
+        }
+        Insert: {
+          centro_custo_id?: string | null
+          competencia?: string | null
+          conta_bancaria_id?: string | null
+          conta_id?: string | null
+          created_at?: string | null
+          data_emissao?: string | null
+          data_pagamento?: string | null
+          data_vencimento: string
+          desconto?: number | null
+          descricao?: string | null
+          forma_pagamento?: string | null
+          fornecedor?: string | null
+          id?: string
+          juros_multa?: number | null
+          num_documento?: string | null
+          recorrente?: boolean | null
+          status?: string | null
+          valor_original: number
+          valor_pago?: number | null
+        }
+        Update: {
+          centro_custo_id?: string | null
+          competencia?: string | null
+          conta_bancaria_id?: string | null
+          conta_id?: string | null
+          created_at?: string | null
+          data_emissao?: string | null
+          data_pagamento?: string | null
+          data_vencimento?: string
+          desconto?: number | null
+          descricao?: string | null
+          forma_pagamento?: string | null
+          fornecedor?: string | null
+          id?: string
+          juros_multa?: number | null
+          num_documento?: string | null
+          recorrente?: boolean | null
+          status?: string | null
+          valor_original?: number
+          valor_pago?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contas_pagar_centro_custo_id_fkey"
+            columns: ["centro_custo_id"]
+            isOneToOne: false
+            referencedRelation: "centros_custo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contas_pagar_conta_bancaria_id_fkey"
+            columns: ["conta_bancaria_id"]
+            isOneToOne: false
+            referencedRelation: "contas_bancarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contas_pagar_conta_id_fkey"
+            columns: ["conta_id"]
+            isOneToOne: false
+            referencedRelation: "plano_contas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contas_receber: {
+        Row: {
+          area_juridica: string | null
+          cliente_id: string | null
+          competencia: string | null
+          conta_bancaria_id: string | null
+          created_at: string | null
+          data_emissao: string | null
+          data_recebimento: string | null
+          data_vencimento: string
+          descricao: string | null
+          forma_pagamento: string | null
+          id: string
+          juros_multa: number | null
+          nf_recibo: string | null
+          num_processo: string | null
+          socio_id: string | null
+          status: string | null
+          tipo_honorario: string | null
+          valor_original: number
+          valor_recebido: number | null
+        }
+        Insert: {
+          area_juridica?: string | null
+          cliente_id?: string | null
+          competencia?: string | null
+          conta_bancaria_id?: string | null
+          created_at?: string | null
+          data_emissao?: string | null
+          data_recebimento?: string | null
+          data_vencimento: string
+          descricao?: string | null
+          forma_pagamento?: string | null
+          id?: string
+          juros_multa?: number | null
+          nf_recibo?: string | null
+          num_processo?: string | null
+          socio_id?: string | null
+          status?: string | null
+          tipo_honorario?: string | null
+          valor_original: number
+          valor_recebido?: number | null
+        }
+        Update: {
+          area_juridica?: string | null
+          cliente_id?: string | null
+          competencia?: string | null
+          conta_bancaria_id?: string | null
+          created_at?: string | null
+          data_emissao?: string | null
+          data_recebimento?: string | null
+          data_vencimento?: string
+          descricao?: string | null
+          forma_pagamento?: string | null
+          id?: string
+          juros_multa?: number | null
+          nf_recibo?: string | null
+          num_processo?: string | null
+          socio_id?: string | null
+          status?: string | null
+          tipo_honorario?: string | null
+          valor_original?: number
+          valor_recebido?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contas_receber_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contas_receber_conta_bancaria_id_fkey"
+            columns: ["conta_bancaria_id"]
+            isOneToOne: false
+            referencedRelation: "contas_bancarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contas_receber_socio_id_fkey"
+            columns: ["socio_id"]
+            isOneToOne: false
+            referencedRelation: "socios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lancamentos: {
+        Row: {
+          area_juridica: string | null
+          centro_custo_id: string | null
+          cliente_id: string | null
+          competencia: string
+          conta_bancaria_id: string | null
+          conta_id: string
+          created_at: string | null
+          data_lancamento: string
+          data_pagamento: string | null
+          descricao: string
+          forma_pagamento: string | null
+          id: number
+          num_documento: string | null
+          num_processo: string | null
+          observacoes: string | null
+          parcela: string | null
+          regime: string | null
+          socio_id: string | null
+          status: string | null
+          tipo: string
+          updated_at: string | null
+          valor_previsto: number | null
+          valor_realizado: number
+        }
+        Insert: {
+          area_juridica?: string | null
+          centro_custo_id?: string | null
+          cliente_id?: string | null
+          competencia: string
+          conta_bancaria_id?: string | null
+          conta_id: string
+          created_at?: string | null
+          data_lancamento: string
+          data_pagamento?: string | null
+          descricao: string
+          forma_pagamento?: string | null
+          id?: number
+          num_documento?: string | null
+          num_processo?: string | null
+          observacoes?: string | null
+          parcela?: string | null
+          regime?: string | null
+          socio_id?: string | null
+          status?: string | null
+          tipo: string
+          updated_at?: string | null
+          valor_previsto?: number | null
+          valor_realizado: number
+        }
+        Update: {
+          area_juridica?: string | null
+          centro_custo_id?: string | null
+          cliente_id?: string | null
+          competencia?: string
+          conta_bancaria_id?: string | null
+          conta_id?: string
+          created_at?: string | null
+          data_lancamento?: string
+          data_pagamento?: string | null
+          descricao?: string
+          forma_pagamento?: string | null
+          id?: number
+          num_documento?: string | null
+          num_processo?: string | null
+          observacoes?: string | null
+          parcela?: string | null
+          regime?: string | null
+          socio_id?: string | null
+          status?: string | null
+          tipo?: string
+          updated_at?: string | null
+          valor_previsto?: number | null
+          valor_realizado?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lancamentos_centro_custo_id_fkey"
+            columns: ["centro_custo_id"]
+            isOneToOne: false
+            referencedRelation: "centros_custo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lancamentos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lancamentos_conta_bancaria_id_fkey"
+            columns: ["conta_bancaria_id"]
+            isOneToOne: false
+            referencedRelation: "contas_bancarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lancamentos_conta_id_fkey"
+            columns: ["conta_id"]
+            isOneToOne: false
+            referencedRelation: "plano_contas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lancamentos_socio_id_fkey"
+            columns: ["socio_id"]
+            isOneToOne: false
+            referencedRelation: "socios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plano_contas: {
+        Row: {
+          ativo: boolean | null
+          centro_custo_padrao: string | null
+          codigo: string
+          created_at: string | null
+          descricao: string
+          grupo: string
+          id: string
+          natureza: string | null
+          subgrupo: string | null
+          tipo: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          centro_custo_padrao?: string | null
+          codigo: string
+          created_at?: string | null
+          descricao: string
+          grupo: string
+          id?: string
+          natureza?: string | null
+          subgrupo?: string | null
+          tipo: string
+        }
+        Update: {
+          ativo?: boolean | null
+          centro_custo_padrao?: string | null
+          codigo?: string
+          created_at?: string | null
+          descricao?: string
+          grupo?: string
+          id?: string
+          natureza?: string | null
+          subgrupo?: string | null
+          tipo?: string
+        }
+        Relationships: []
+      }
+      socios: {
+        Row: {
+          area_principal: string | null
+          ativo: boolean | null
+          id: string
+          nome: string
+          oab: string | null
+          participacao: number | null
+        }
+        Insert: {
+          area_principal?: string | null
+          ativo?: boolean | null
+          id?: string
+          nome: string
+          oab?: string | null
+          participacao?: number | null
+        }
+        Update: {
+          area_principal?: string | null
+          ativo?: boolean | null
+          id?: string
+          nome?: string
+          oab?: string | null
+          participacao?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
