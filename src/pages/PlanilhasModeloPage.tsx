@@ -130,7 +130,9 @@ function downloadCSV(template: TemplateInfo) {
 }
 
 function downloadAll() {
-  templates.forEach(t => downloadCSV(t));
+  templates.forEach((t, i) => {
+    setTimeout(() => downloadCSV(t), i * 500);
+  });
 }
 
 export default function PlanilhasModeloPage() {
