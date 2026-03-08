@@ -181,7 +181,7 @@ export default function DashboardPage() {
           status: l.status,
         })));
       } else {
-        setUltimosLancamentos(DEMO_LANCAMENTOS);
+        setUltimosLancamentos([]);
       }
 
       setLoading(false);
