@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useYear } from '@/contexts/YearContext';
-import { formatCurrency, getMonthName } from '@/lib/format';
+import { formatCurrency, formatDate, getMonthName } from '@/lib/format';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
-  DollarSign, TrendingUp, Wallet, ArrowDownToLine, ArrowUpFromLine,
+  TrendingUp, TrendingDown, DollarSign, Percent,
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
-  LineChart, Line, Area, AreaChart,
   PieChart, Pie, Cell,
+  AreaChart, Area,
 } from 'recharts';
 
 interface MonthlyData {
@@ -20,44 +20,73 @@ interface MonthlyData {
   resultado: number;
 }
 
-interface TopCliente {
-  nome: string;
-  total: number;
-  pct: number;
-}
+// Demo data from spec
+const DEMO_MONTHLY: MonthlyData[] = [
+  { month: 'Jan', receitas: 98200, despesas: 50700, resultado: 47500 },
+  { month: 'Fev', receitas: 87300, despesas: 47200, resultado: 40100 },
+  { month: 'Mar', receitas: 94500, despesas: 51600, resultado: 42900 },
+  { month: 'Abr', receitas: 108600, despesas: 57200, resultado: 51400 },
+  { month: 'Mai', receitas: 92100, despesas: 49800, resultado: 42300 },
+  { month: 'Jun', receitas: 101400, despesas: 53100, resultado: 48300 },
+];
+
+const DEMO_PIE = [
+  { name: 'Pessoal', value: 38 },
+  { name: 'Administrativo', value: 28 },
+  { name: 'Impostos', value: 15 },
+  { name: 'Operacional', value: 13 },
+  { name: 'Marketing', value: 6 },
+];
 
 const PIE_COLORS: Record<string, string> = {
-  'PESSOAL': '#3b82f6',
-  'ADMINISTRATIVAS': '#10b981',
-  'COMERCIAIS': '#f59e0b',
-  'FINANCEIRAS': '#f43f5e',
-  'IMPOSTOS': '#a855f7',
+  'Pessoal': '#1F3864',
+  'Administrativo': '#2E75B6',
+  'Impostos': '#f59e0b',
+  'Operacional': '#10b981',
+  'Marketing': '#a855f7',
   'Outros': '#94a3b8',
 };
 
+const DEMO_LANCAMENTOS = [
+  { id: 1, data: '2026-03-07', descricao: 'Honorários - Processo 2024/001', conta: 'Honorários Avulsos', valor: 15800, tipo: 'R', status: 'Pago' },
+  { id: 2, data: '2026-03-06', descricao: 'Aluguel Escritório - Março', conta: 'Aluguel', valor: 8500, tipo: 'D', status: 'Pago' },
+  { id: 3, data: '2026-03-05', descricao: 'Salários e Pró-labore', conta: 'Salários', valor: 22300, tipo: 'D', status: 'Pendente' },
+  { id: 4, data: '2026-03-04', descricao: 'Mensalidade Cliente XYZ Ltda', conta: 'Mensalidades', valor: 4500, tipo: 'R', status: 'Pago' },
+  { id: 5, data: '2026-03-03', descricao: 'Custas Processuais - Vara Cível', conta: 'Custas', valor: 1250, tipo: 'D', status: 'Vencido' },
+];
+
+const STATUS_BADGE: Record<string, string> = {
+  Pago: 'bg-[#DCFCE7] text-[#166534]',
+  Pendente: 'bg-[#FEF9C3] text-[#854D0E]',
+  Vencido: 'bg-[#FEE2E2] text-[#991B1B]',
+  'A vencer': 'bg-[#DBEAFE] text-[#1E40AF]',
+  Cancelado: 'bg-[#F3F4F6] text-[#6B7280]',
+};
+
 function KpiCard({
-  label, value, icon: Icon, iconBg, iconColor, badge,
+  label, value, icon: Icon, iconBg, iconColor, badge, valueColor,
 }: {
   label: string;
   value: string;
   icon: any;
   iconBg: string;
   iconColor: string;
+  valueColor?: string;
   badge?: { value: string; positive: boolean } | null;
 }) {
   return (
-    <Card className="rounded-xl shadow-sm">
+    <Card className="rounded-xl shadow-sm bg-white">
       <CardContent className="p-6 flex items-center gap-4">
         <div className={`h-12 w-12 rounded-full flex items-center justify-center shrink-0 ${iconBg}`}>
           <Icon className={`h-5 w-5 ${iconColor}`} />
         </div>
         <div className="min-w-0">
           <p className="text-xs font-medium text-muted-foreground truncate">{label}</p>
-          <p className="text-xl font-bold truncate">{value}</p>
+          <p className={`text-xl font-bold truncate ${valueColor || ''}`}>{value}</p>
           {badge && (
             <Badge
               variant="secondary"
-              className={`text-[10px] mt-1 ${badge.positive ? 'text-success bg-success/10' : 'text-destructive bg-destructive/10'}`}
+              className={`text-[10px] mt-1 ${badge.positive ? 'text-[#166534] bg-[#DCFCE7]' : 'text-[#991B1B] bg-[#FEE2E2]'}`}
             >
               {badge.positive ? '▲' : '▼'} {badge.value}
             </Badge>
@@ -72,173 +101,125 @@ export default function DashboardPage() {
   const { selectedYear } = useYear();
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
   const [kpis, setKpis] = useState({
-    receitaMesAtual: 0,
-    receitaMesAnterior: 0,
-    resultadoMes: 0,
-    saldoCaixa: 0,
-    aReceberPendente: 0,
-    aPagarPendente: 0,
+    receitaTotal: 0,
+    despesaTotal: 0,
+    resultado: 0,
+    margem: 0,
+    variacaoReceita: null as number | null,
   });
   const [despesasPie, setDespesasPie] = useState<{ name: string; value: number }[]>([]);
-  const [topClientes, setTopClientes] = useState<TopCliente[]>([]);
+  const [ultimosLancamentos, setUltimosLancamentos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       setLoading(true);
 
-      const now = new Date();
-      // If viewing current year, use current month. Otherwise use December (full year).
-      const mesAtual = selectedYear === now.getFullYear() ? now.getMonth() + 1 : 12;
-
-      // 1) All lancamentos for selectedYear
       const { data: lancamentos } = await supabase
         .from('lancamentos')
-        .select('*, plano_contas(codigo, grupo), clientes(nome)')
+        .select('*, plano_contas(codigo, grupo, descricao), clientes(nome)')
         .gte('competencia', `${selectedYear}-01-01`)
         .lte('competencia', `${selectedYear}-12-31`);
 
-      // 2) All lancamentos ever (for saldo de caixa)
-      const { data: allLanc } = await supabase
-        .from('lancamentos')
-        .select('tipo, valor_realizado, status')
-        .eq('status', 'Pago');
+      const hasData = lancamentos && lancamentos.length > 0;
 
-      // 3) Saldos iniciais
-      const { data: bancos } = await supabase
-        .from('contas_bancarias')
-        .select('saldo_inicial');
+      if (!hasData) {
+        // Use demo data
+        setMonthlyData(DEMO_MONTHLY);
+        const totalRec = DEMO_MONTHLY.reduce((s, m) => s + m.receitas, 0);
+        const totalDesp = DEMO_MONTHLY.reduce((s, m) => s + m.despesas, 0);
+        const resultado = totalRec - totalDesp;
+        setKpis({
+          receitaTotal: totalRec,
+          despesaTotal: totalDesp,
+          resultado,
+          margem: totalRec > 0 ? (resultado / totalRec) * 100 : 0,
+          variacaoReceita: 8.2,
+        });
+        setDespesasPie(DEMO_PIE);
+        setUltimosLancamentos(DEMO_LANCAMENTOS);
+        setLoading(false);
+        return;
+      }
 
-      // 4) Contas a receber pendentes
-      const { data: cReceberPend } = await supabase
-        .from('contas_receber')
-        .select('valor_original, juros_multa, valor_recebido')
-        .in('status', ['Pendente', 'Vencido']);
-
-      // 5) Contas a pagar pendentes
-      const { data: cPagarPend } = await supabase
-        .from('contas_pagar')
-        .select('valor_original, desconto, juros_multa, valor_pago')
-        .in('status', ['Pendente', 'Vencido']);
-
-      if (!lancamentos) { setLoading(false); return; }
-
-      // Monthly aggregation (all 12 months)
+      // Real data processing
       const monthly: Record<number, { receitas: number; despesas: number }> = {};
       for (let i = 0; i < 12; i++) monthly[i] = { receitas: 0, despesas: 0 };
 
-      // Despesas by group code prefix
-      const despByCategory: Record<string, number> = {
-        'PESSOAL': 0,
-        'ADMINISTRATIVAS': 0,
-        'COMERCIAIS': 0,
-        'FINANCEIRAS': 0,
-        'IMPOSTOS': 0,
-        'Outros': 0,
-      };
-
-      // Top clientes
-      const clienteMap: Record<string, { nome: string; total: number }> = {};
+      const despByCategory: Record<string, number> = {};
+      const now = new Date();
+      const mesAtual = selectedYear === now.getFullYear() ? now.getMonth() : 11;
 
       lancamentos.forEach((l: any) => {
         const m = new Date(l.competencia).getMonth();
         const val = Number(l.valor_realizado) || 0;
-        const codigo = l.plano_contas?.codigo || '';
-        const grupo = l.plano_contas?.grupo || '';
+        const grupo = l.plano_contas?.grupo || 'Outros';
 
         if (l.tipo === 'R') {
           monthly[m].receitas += val;
-          // Top clientes
-          if (l.clientes?.nome) {
-            const cid = l.cliente_id || l.clientes.nome;
-            if (!clienteMap[cid]) clienteMap[cid] = { nome: l.clientes.nome, total: 0 };
-            clienteMap[cid].total += val;
-          }
         } else {
           monthly[m].despesas += val;
-          // Categorize despesas by code prefix
-          if (codigo.startsWith('4.')) despByCategory['PESSOAL'] += val;
-          else if (codigo.startsWith('5.')) despByCategory['ADMINISTRATIVAS'] += val;
-          else if (codigo.startsWith('6.')) despByCategory['COMERCIAIS'] += val;
-          else if (codigo.startsWith('7.')) despByCategory['FINANCEIRAS'] += val;
-          else if (codigo.startsWith('8.')) despByCategory['IMPOSTOS'] += val;
-          else despByCategory['Outros'] += val;
+          despByCategory[grupo] = (despByCategory[grupo] || 0) + val;
         }
       });
 
-      // Receita mês atual e anterior
-      const mesIdx = mesAtual - 1;
-      const mesAntIdx = mesIdx > 0 ? mesIdx - 1 : 11;
-      const receitaMesAtual = monthly[mesIdx]?.receitas || 0;
-      const receitaMesAnterior = monthly[mesAntIdx]?.receitas || 0;
-      const resultadoMes = (monthly[mesIdx]?.receitas || 0) - (monthly[mesIdx]?.despesas || 0);
+      const receitaTotal = Object.values(monthly).reduce((s, m) => s + m.receitas, 0);
+      const despesaTotal = Object.values(monthly).reduce((s, m) => s + m.despesas, 0);
+      const resultado = receitaTotal - despesaTotal;
 
-      // Saldo de caixa
-      const saldoInicial = (bancos || []).reduce((s, b) => s + (Number(b.saldo_inicial) || 0), 0);
-      let totalRecPago = 0, totalDesPago = 0;
-      (allLanc || []).forEach((l: any) => {
-        const val = Number(l.valor_realizado) || 0;
-        if (l.tipo === 'R') totalRecPago += val;
-        else totalDesPago += val;
-      });
-      const saldoCaixa = saldoInicial + totalRecPago - totalDesPago;
-
-      // Contas a receber pendente
-      const aReceberPendente = (cReceberPend || []).reduce((s, c) =>
-        s + (Number(c.valor_original) || 0) + (Number(c.juros_multa) || 0) - (Number(c.valor_recebido) || 0), 0);
-
-      // Contas a pagar pendente
-      const aPagarPendente = (cPagarPend || []).reduce((s, c) =>
-        s + (Number(c.valor_original) || 0) - (Number(c.desconto) || 0) + (Number(c.juros_multa) || 0) - (Number(c.valor_pago) || 0), 0);
-
-      // Also count lancamentos pendentes as fallback for a receber / a pagar
-      let lancPendR = 0, lancPendD = 0;
-      lancamentos.forEach((l: any) => {
-        if (l.status === 'Pendente') {
-          const val = Number(l.valor_realizado) || 0;
-          if (l.tipo === 'R') lancPendR += val;
-          else lancPendD += val;
-        }
-      });
+      const recMesAtual = monthly[mesAtual]?.receitas || 0;
+      const recMesAnterior = mesAtual > 0 ? (monthly[mesAtual - 1]?.receitas || 0) : 0;
+      const variacao = recMesAnterior > 0
+        ? ((recMesAtual - recMesAnterior) / recMesAnterior) * 100
+        : null;
 
       setKpis({
-        receitaMesAtual,
-        receitaMesAnterior,
-        resultadoMes,
-        saldoCaixa,
-        aReceberPendente: aReceberPendente || lancPendR,
-        aPagarPendente: aPagarPendente || lancPendD,
+        receitaTotal,
+        despesaTotal,
+        resultado,
+        margem: receitaTotal > 0 ? (resultado / receitaTotal) * 100 : 0,
+        variacaoReceita: variacao,
       });
 
-      // Monthly chart data (all 12 months)
       setMonthlyData(
         Array.from({ length: 12 }, (_, i) => ({
           month: getMonthName(i),
           receitas: monthly[i].receitas,
           despesas: monthly[i].despesas,
           resultado: monthly[i].receitas - monthly[i].despesas,
-        }))
+        })).filter(m => m.receitas > 0 || m.despesas > 0)
       );
 
-      // Pie chart
       setDespesasPie(
         Object.entries(despByCategory)
           .filter(([_, v]) => v > 0)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 6)
           .map(([name, value]) => ({ name, value }))
       );
 
-      // Top 5 clientes
-      const totalFat = Object.values(clienteMap).reduce((s, c) => s + c.total, 0);
-      setTopClientes(
-        Object.values(clienteMap)
-          .sort((a, b) => b.total - a.total)
-          .slice(0, 5)
-          .map((c, i) => ({
-            nome: c.nome,
-            total: c.total,
-            pct: totalFat > 0 ? (c.total / totalFat) * 100 : 0,
-          }))
-      );
+      // Últimos lançamentos
+      const { data: ultimos } = await supabase
+        .from('lancamentos')
+        .select('id, data_lancamento, descricao, plano_contas(descricao), valor_realizado, tipo, status')
+        .gte('competencia', `${selectedYear}-01-01`)
+        .lte('competencia', `${selectedYear}-12-31`)
+        .order('data_lancamento', { ascending: false })
+        .limit(5);
+
+      if (ultimos && ultimos.length > 0) {
+        setUltimosLancamentos(ultimos.map((l: any) => ({
+          id: l.id,
+          data: l.data_lancamento,
+          descricao: l.descricao,
+          conta: l.plano_contas?.descricao || '—',
+          valor: Number(l.valor_realizado),
+          tipo: l.tipo,
+          status: l.status,
+        })));
+      } else {
+        setUltimosLancamentos(DEMO_LANCAMENTOS);
+      }
 
       setLoading(false);
     }
@@ -248,111 +229,82 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="space-y-6 animate-fade-in">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          {[1,2,3,4,5].map(i => <div key={i} className="h-24 rounded-xl bg-muted animate-pulse" />)}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map(i => <div key={i} className="h-24 rounded-xl bg-muted animate-pulse" />)}
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {[1,2].map(i => <div key={i} className="h-80 rounded-xl bg-muted animate-pulse" />)}
+          {[1, 2].map(i => <div key={i} className="h-80 rounded-xl bg-muted animate-pulse" />)}
         </div>
       </div>
     );
   }
 
-  const variacao = kpis.receitaMesAnterior > 0
-    ? ((kpis.receitaMesAtual - kpis.receitaMesAnterior) / kpis.receitaMesAnterior) * 100
-    : null;
-
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      {/* KPI Cards - 4 cols */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard
-          label="Receita Bruta do Mês"
-          value={formatCurrency(kpis.receitaMesAtual)}
-          icon={DollarSign}
-          iconBg="bg-success/10"
-          iconColor="text-success"
-          badge={variacao !== null ? {
-            value: `${Math.abs(variacao).toFixed(1)}% vs mês ant.`,
-            positive: variacao >= 0,
+          label="Receita Total"
+          value={formatCurrency(kpis.receitaTotal)}
+          icon={TrendingUp}
+          iconBg="bg-green-50"
+          iconColor="text-green-600"
+          valueColor="text-green-700"
+          badge={kpis.variacaoReceita !== null ? {
+            value: `${Math.abs(kpis.variacaoReceita).toFixed(1)}% vs mês ant.`,
+            positive: kpis.variacaoReceita >= 0,
           } : null}
         />
         <KpiCard
-          label="Resultado Líquido do Mês"
-          value={formatCurrency(kpis.resultadoMes)}
-          icon={TrendingUp}
-          iconBg={kpis.resultadoMes >= 0 ? 'bg-success/10' : 'bg-destructive/10'}
-          iconColor={kpis.resultadoMes >= 0 ? 'text-success' : 'text-destructive'}
+          label="Total Despesas"
+          value={formatCurrency(kpis.despesaTotal)}
+          icon={TrendingDown}
+          iconBg="bg-red-50"
+          iconColor="text-red-600"
+          valueColor="text-red-700"
         />
         <KpiCard
-          label="Saldo de Caixa Atual"
-          value={formatCurrency(kpis.saldoCaixa)}
-          icon={Wallet}
-          iconBg="bg-primary/10"
-          iconColor="text-primary"
+          label="Resultado Líquido"
+          value={formatCurrency(kpis.resultado)}
+          icon={DollarSign}
+          iconBg={kpis.resultado >= 0 ? 'bg-green-50' : 'bg-red-50'}
+          iconColor={kpis.resultado >= 0 ? 'text-green-600' : 'text-red-600'}
+          valueColor={kpis.resultado >= 0 ? 'text-green-700' : 'text-red-700'}
         />
         <KpiCard
-          label="A Receber Pendente"
-          value={formatCurrency(kpis.aReceberPendente)}
-          icon={ArrowDownToLine}
-          iconBg="bg-warning/10"
-          iconColor="text-warning"
-        />
-        <KpiCard
-          label="A Pagar Pendente"
-          value={formatCurrency(kpis.aPagarPendente)}
-          icon={ArrowUpFromLine}
-          iconBg="bg-destructive/10"
-          iconColor="text-destructive"
+          label="Margem Líquida"
+          value={`${kpis.margem.toFixed(1)}%`}
+          icon={Percent}
+          iconBg="bg-blue-50"
+          iconColor="text-[#2E75B6]"
+          valueColor="text-[#1F3864]"
         />
       </div>
 
-      {/* Row 2: BarChart + LineChart */}
+      {/* Charts row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card className="rounded-xl shadow-sm">
+        {/* Bar Chart */}
+        <Card className="rounded-xl shadow-sm bg-white">
           <CardContent className="pt-6">
-            <p className="text-sm font-semibold mb-4">Receita vs Despesa — {selectedYear}</p>
+            <p className="text-sm font-semibold text-[#1F3864] mb-4">Receitas vs Despesas — {selectedYear}</p>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="month" fontSize={11} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                <YAxis fontSize={11} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="month" fontSize={11} tick={{ fill: '#94a3b8' }} />
+                <YAxis fontSize={11} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} tick={{ fill: '#94a3b8' }} />
                 <Tooltip formatter={(v: number) => formatCurrency(v)} />
                 <Legend />
-                <Bar dataKey="receitas" name="Receita" fill="#10b981" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="despesas" name="Despesa" fill="#f43f5e" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="receitas" name="Receita" fill="#1F3864" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="despesas" name="Despesa" fill="#ef4444" radius={[4, 4, 0, 0]} opacity={0.7} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        <Card className="rounded-xl shadow-sm">
+        {/* Pie Chart */}
+        <Card className="rounded-xl shadow-sm bg-white">
           <CardContent className="pt-6">
-            <p className="text-sm font-semibold mb-4">Resultado Líquido Mensal — {selectedYear}</p>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={monthlyData}>
-                <defs>
-                  <linearGradient id="gradResult" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#2563eb" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={true} vertical={false} />
-                <XAxis dataKey="month" fontSize={11} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                <YAxis fontSize={11} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                <Tooltip formatter={(v: number) => formatCurrency(v)} />
-                <Area type="monotone" dataKey="resultado" name="Resultado" stroke="#2563eb" strokeWidth={2} fill="url(#gradResult)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Row 3: PieChart + Top Clientes */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card className="rounded-xl shadow-sm">
-          <CardContent className="pt-6">
-            <p className="text-sm font-semibold mb-4">Composição das Despesas — {selectedYear}</p>
+            <p className="text-sm font-semibold text-[#1F3864] mb-4">Composição das Despesas — {selectedYear}</p>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
@@ -370,45 +322,71 @@ export default function DashboardPage() {
                     <Cell key={i} fill={PIE_COLORS[entry.name] || '#94a3b8'} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(v: number) => formatCurrency(v)} />
+                <Tooltip />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
-
-        <Card className="rounded-xl shadow-sm">
-          <CardContent className="pt-6">
-            <p className="text-sm font-semibold mb-4">Top 5 Clientes por Faturamento — {selectedYear}</p>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left py-3 px-2 font-medium text-muted-foreground w-8">#</th>
-                    <th className="text-left py-3 px-2 font-medium text-muted-foreground">Cliente</th>
-                    <th className="text-right py-3 px-2 font-medium text-muted-foreground">Total Faturado</th>
-                    <th className="text-right py-3 px-2 font-medium text-muted-foreground">%</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {topClientes.map((c, i) => (
-                    <tr key={c.nome} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                      <td className="py-3 px-2 font-medium text-muted-foreground">{i + 1}</td>
-                      <td className="py-3 px-2 font-medium">{c.nome}</td>
-                      <td className="py-3 px-2 text-right text-success font-medium">{formatCurrency(c.total)}</td>
-                      <td className="py-3 px-2 text-right text-muted-foreground">{c.pct.toFixed(1)}%</td>
-                    </tr>
-                  ))}
-                  {topClientes.length === 0 && (
-                    <tr>
-                      <td colSpan={4} className="py-6 text-center text-muted-foreground">Nenhum dado encontrado</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
       </div>
+
+      {/* Area Chart */}
+      <Card className="rounded-xl shadow-sm bg-white">
+        <CardContent className="pt-6">
+          <p className="text-sm font-semibold text-[#1F3864] mb-4">Evolução do Resultado Líquido — {selectedYear}</p>
+          <ResponsiveContainer width="100%" height={280}>
+            <AreaChart data={monthlyData}>
+              <defs>
+                <linearGradient id="gradResult" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#2E75B6" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#2E75B6" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+              <XAxis dataKey="month" fontSize={11} tick={{ fill: '#94a3b8' }} />
+              <YAxis fontSize={11} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} tick={{ fill: '#94a3b8' }} />
+              <Tooltip formatter={(v: number) => formatCurrency(v)} />
+              <Area type="monotone" dataKey="resultado" name="Resultado" stroke="#2E75B6" strokeWidth={2} fill="url(#gradResult)" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      {/* Últimos Lançamentos */}
+      <Card className="rounded-xl shadow-sm bg-white">
+        <CardContent className="pt-6">
+          <p className="text-sm font-semibold text-[#1F3864] mb-4">Últimos Lançamentos</p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="text-left py-3 px-2 font-medium text-muted-foreground">Data</th>
+                  <th className="text-left py-3 px-2 font-medium text-muted-foreground">Descrição</th>
+                  <th className="text-left py-3 px-2 font-medium text-muted-foreground">Conta</th>
+                  <th className="text-right py-3 px-2 font-medium text-muted-foreground">Valor</th>
+                  <th className="text-left py-3 px-2 font-medium text-muted-foreground">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ultimosLancamentos.map((l) => (
+                  <tr key={l.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                    <td className="py-3 px-2 whitespace-nowrap">{formatDate(l.data)}</td>
+                    <td className="py-3 px-2 max-w-[250px] truncate">{l.descricao}</td>
+                    <td className="py-3 px-2 text-muted-foreground">{l.conta}</td>
+                    <td className={`py-3 px-2 text-right font-medium font-mono ${l.tipo === 'R' ? 'text-green-700' : 'text-red-700'}`}>
+                      {formatCurrency(l.valor)}
+                    </td>
+                    <td className="py-3 px-2">
+                      <Badge className={`text-[10px] border-0 ${STATUS_BADGE[l.status] || 'bg-gray-100 text-gray-600'}`}>
+                        {l.status}
+                      </Badge>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

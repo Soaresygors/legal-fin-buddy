@@ -11,19 +11,14 @@ import DashboardPage from "./pages/DashboardPage";
 import LancamentosPage from "./pages/LancamentosPage";
 import ContasReceberPage from "./pages/ContasReceberPage";
 import ContasPagarPage from "./pages/ContasPagarPage";
-import FluxoCaixaPage from "./pages/FluxoCaixaPage";
 import DREPage from "./pages/DREPage";
-import IndicadoresPage from "./pages/IndicadoresPage";
 import CadastrosPage from "./pages/CadastrosPage";
-import ConfiguracoesPage from "./pages/ConfiguracoesPage";
+import ImportacaoPage from "./pages/ImportacaoPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
-import MigracaoPage from "./pages/MigracaoPage";
-import PlanilhasModeloPage from "./pages/PlanilhasModeloPage";
-import ImportacaoCSVPage from "./pages/ImportacaoCSVPage";
 
 const queryClient = new QueryClient();
 
@@ -49,19 +44,14 @@ const App = () => (
                   <Route path="/lancamentos" element={<LancamentosPage />} />
                   <Route path="/contas-receber" element={<ContasReceberPage />} />
                   <Route path="/contas-pagar" element={<ContasPagarPage />} />
-                  <Route path="/fluxo-caixa" element={<FluxoCaixaPage />} />
+                  <Route path="/importacao" element={<ImportacaoPage />} />
                   <Route path="/dre" element={<DREPage />} />
-                  <Route path="/indicadores" element={<IndicadoresPage />} />
-                  <Route path="/cadastros" element={<Navigate to="/cadastros/clientes" replace />} />
+                  <Route path="/cadastros" element={<Navigate to="/cadastros/socios" replace />} />
+                  <Route path="/cadastros/socios" element={<CadastrosPage />} />
                   <Route path="/cadastros/clientes" element={<CadastrosPage />} />
                   <Route path="/cadastros/plano-contas" element={<CadastrosPage />} />
                   <Route path="/cadastros/centros-custo" element={<CadastrosPage />} />
-                  <Route path="/cadastros/socios" element={<CadastrosPage />} />
                   <Route path="/cadastros/contas-bancarias" element={<CadastrosPage />} />
-                  <Route path="/configuracoes" element={<ConfiguracoesPage />} />
-                  <Route path="/admin/migracao" element={<MigracaoPage />} />
-                  <Route path="/admin/planilhas" element={<PlanilhasModeloPage />} />
-                  <Route path="/admin/importacao" element={<ImportacaoCSVPage />} />
                 </Route>
               </Route>
               <Route path="*" element={<NotFound />} />

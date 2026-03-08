@@ -28,11 +28,12 @@ const FORMAS_PAG = ['PIX', 'Transferência', 'Boleto', 'Cartão Crédito', 'Cart
 const PAGE_SIZE = 25;
 
 const statusBadge: Record<string, string> = {
-  Pendente: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-  Pago: 'bg-green-100 text-green-700 border-green-200',
-  Vencido: 'bg-red-100 text-red-700 border-red-200',
+  Pendente: 'bg-[#FEF9C3] text-[#854D0E] border-[#fef08a]',
+  Pago: 'bg-[#DCFCE7] text-[#166534] border-[#bbf7d0]',
+  'A vencer': 'bg-[#DBEAFE] text-[#1E40AF] border-[#bfdbfe]',
+  Vencido: 'bg-[#FEE2E2] text-[#991B1B] border-[#fecaca]',
   Parcial: 'bg-orange-100 text-orange-700 border-orange-200',
-  Cancelado: 'bg-muted text-muted-foreground',
+  Cancelado: 'bg-[#F3F4F6] text-[#6B7280] border-[#e5e7eb]',
 };
 
 function DatePicker({ value, onChange, placeholder = 'Selecione data' }: { value: Date | undefined; onChange: (d: Date | undefined) => void; placeholder?: string }) {
