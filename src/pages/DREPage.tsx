@@ -89,22 +89,27 @@ export default function DREPage() {
       });
 
       // 1. RECEITA BRUTA
-      const honContratuais = lineFromPrefixes('Honorários Contratuais', grouped, ['1.1'], 'normal', 1);
-      const honExito = lineFromPrefixes('Honorários de Êxito', grouped, ['1.2'], 'normal', 1);
-      const honRecorrentes = lineFromPrefixes('Honorários Recorrentes', grouped, ['1.3'], 'normal', 1);
-      const consultorias = lineFromPrefixes('Consultorias e Pareceres', grouped, ['1.4'], 'normal', 1);
-      const reembolsos = lineFromPrefixes('Reembolsos', grouped, ['1.7'], 'normal', 1);
-      const outrasRec = lineFromPrefixes('Outras Receitas', grouped, ['1.9'], 'normal', 1);
-      const recBrutaMonths = sumRows(honContratuais, honExito, honRecorrentes, consultorias, reembolsos, outrasRec);
+      const honContratuais = lineFromCodes('Honorários Contratuais', grouped, ['1.1'], 'normal', 1);
+      const honExito = lineFromCodes('Honorários de Êxito', grouped, ['1.2'], 'normal', 1);
+      const honRecorrentes = lineFromCodes('Honorários Recorrentes', grouped, ['1.3'], 'normal', 1);
+      const consultorias = lineFromCodes('Consultorias e Pareceres', grouped, ['1.4'], 'normal', 1);
+      const arbitragem = lineFromCodes('Arbitragem/Mediação', grouped, ['1.5'], 'normal', 1);
+      const recuperacao = lineFromCodes('Recuperação de Crédito', grouped, ['1.6'], 'normal', 1);
+      const reembolsos = lineFromCodes('Reembolsos', grouped, ['1.7'], 'normal', 1);
+      const recJudiciais = lineFromCodes('Receitas Judiciais Diversas', grouped, ['1.8'], 'normal', 1);
+      const outrasRec = lineFromCodes('Outras Receitas', grouped, ['1.9'], 'normal', 1);
+      const rendaPatrimonial = lineFromCodes('Renda Patrimonial', grouped, ['1.10'], 'normal', 1);
+      const recBrutaMonths = sumRows(honContratuais, honExito, honRecorrentes, consultorias, arbitragem, recuperacao, reembolsos, recJudiciais, outrasRec, rendaPatrimonial);
       const subtRecBruta = makeRow('SUBTOTAL RECEITA BRUTA', recBrutaMonths, 'subtotal');
 
       // 2. DEDUÇÕES
-      const iss = lineFromPrefixes('ISS', grouped, ['2.1'], 'normal', 1);
-      const pis = lineFromPrefixes('PIS', grouped, ['2.2'], 'normal', 1);
-      const cofins = lineFromPrefixes('COFINS', grouped, ['2.3'], 'normal', 1);
-      const irrf = lineFromPrefixes('IRRF', grouped, ['2.4'], 'normal', 1);
-      const descontos = lineFromPrefixes('Descontos Concedidos', grouped, ['2.5'], 'normal', 1);
-      const deducoesMonths = sumRows(iss, pis, cofins, irrf, descontos);
+      const iss = lineFromCodes('ISS', grouped, ['2.1'], 'normal', 1);
+      const pis = lineFromCodes('PIS', grouped, ['2.2'], 'normal', 1);
+      const cofins = lineFromCodes('COFINS', grouped, ['2.3'], 'normal', 1);
+      const irrf = lineFromCodes('IRRF', grouped, ['2.4'], 'normal', 1);
+      const descontos = lineFromCodes('Descontos Concedidos', grouped, ['2.5'], 'normal', 1);
+      const outrasDeducoes = lineFromCodes('Outras Deduções', grouped, ['2.6'], 'normal', 1);
+      const deducoesMonths = sumRows(iss, pis, cofins, irrf, descontos, outrasDeducoes);
       const subtDeducoes = makeRow('SUBTOTAL DEDUÇÕES', deducoesMonths, 'subtotal');
 
       // 3. RECEITA LÍQUIDA
@@ -112,13 +117,14 @@ export default function DREPage() {
       const totalRecLiq = makeRow('RECEITA LÍQUIDA', recLiqMonths, 'total');
 
       // 4. CUSTOS DIRETOS
-      const custas = lineFromPrefixes('Custas Processuais', grouped, ['3.1'], 'normal', 1);
-      const taxas = lineFromPrefixes('Taxas', grouped, ['3.2'], 'normal', 1);
-      const pericias = lineFromPrefixes('Perícias', grouped, ['3.3'], 'normal', 1);
-      const correspondentes = lineFromPrefixes('Correspondentes', grouped, ['3.5'], 'normal', 1);
-      const comissoes = lineFromPrefixes('Comissões', grouped, ['3.7'], 'normal', 1);
-      const terceirizados = lineFromPrefixes('Terceirizados', grouped, ['3.6'], 'normal', 1);
-      const custDirMonths = sumRows(custas, taxas, pericias, correspondentes, comissoes, terceirizados);
+      const custas = lineFromCodes('Custas Processuais', grouped, ['3.1'], 'normal', 1);
+      const taxas = lineFromCodes('Taxas', grouped, ['3.2'], 'normal', 1);
+      const pericias = lineFromCodes('Perícias', grouped, ['3.3'], 'normal', 1);
+      const diligencias = lineFromCodes('Diligências', grouped, ['3.4'], 'normal', 1);
+      const correspondentes = lineFromCodes('Correspondentes', grouped, ['3.5'], 'normal', 1);
+      const terceirizados = lineFromCodes('Terceirizados', grouped, ['3.6'], 'normal', 1);
+      const comissoes = lineFromCodes('Comissões', grouped, ['3.7'], 'normal', 1);
+      const custDirMonths = sumRows(custas, taxas, pericias, diligencias, correspondentes, terceirizados, comissoes);
       const subtCustDir = makeRow('SUBTOTAL CUSTOS DIRETOS', custDirMonths, 'subtotal');
 
       // 5. MARGEM DE CONTRIBUIÇÃO
@@ -128,35 +134,46 @@ export default function DREPage() {
 
       // 6. DESPESAS OPERACIONAIS
       // 6.1 Pessoal
-      const salarios = lineFromPrefixes('Salários e Encargos', grouped, ['4.1'], 'normal', 2);
-      const decTercFerias = lineFromPrefixes('13º e Férias', grouped, ['4.2', '4.3'], 'normal', 2);
-      const fgtsInss = lineFromPrefixes('FGTS/INSS', grouped, ['4.4', '4.5'], 'normal', 2);
-      const beneficios = lineFromPrefixes('Benefícios', grouped, ['4.6', '4.7', '4.8'], 'normal', 2);
-      const estagiarios = lineFromPrefixes('Estagiários', grouped, ['4.9'], 'normal', 2);
-      const proLabore = lineFromPrefixes('Pró-labore', grouped, ['4.11'], 'normal', 2);
-      const pessoalMonths = sumRows(salarios, decTercFerias, fgtsInss, beneficios, estagiarios, proLabore);
+      const salarios = lineFromCodes('Salários e Encargos', grouped, ['4.1'], 'normal', 2);
+      const decTerceiro = lineFromCodes('13º Salário', grouped, ['4.2'], 'normal', 2);
+      const ferias = lineFromCodes('Férias e Adicional', grouped, ['4.3'], 'normal', 2);
+      const fgts = lineFromCodes('FGTS', grouped, ['4.4'], 'normal', 2);
+      const inss = lineFromCodes('INSS Patronal', grouped, ['4.5'], 'normal', 2);
+      const valeTransporte = lineFromCodes('Vale Transporte', grouped, ['4.6'], 'normal', 2);
+      const valeRefeicao = lineFromCodes('Vale Refeição', grouped, ['4.7'], 'normal', 2);
+      const planoSaude = lineFromCodes('Plano de Saúde', grouped, ['4.8'], 'normal', 2);
+      const estagiarios = lineFromCodes('Estagiários', grouped, ['4.9'], 'normal', 2);
+      const rescisoes = lineFromCodes('Rescisões', grouped, ['4.10'], 'normal', 2);
+      const proLabore = lineFromCodes('Pró-labore', grouped, ['4.11'], 'normal', 2);
+      const pessoalMonths = sumRows(salarios, decTerceiro, ferias, fgts, inss, valeTransporte, valeRefeicao, planoSaude, estagiarios, rescisoes, proLabore);
       const subtPessoal = makeRow('Subtotal Pessoal', pessoalMonths, 'subtotal');
 
       // 6.2 Administrativas
-      const aluguel = lineFromPrefixes('Aluguel', grouped, ['5.1'], 'normal', 2);
-      const iptu = lineFromPrefixes('IPTU', grouped, ['5.3'], 'normal', 2);
-      const energia = lineFromPrefixes('Energia', grouped, ['5.4'], 'normal', 2);
-      const agua = lineFromPrefixes('Água', grouped, ['5.5'], 'normal', 2);
-      const telefone = lineFromPrefixes('Telefone', grouped, ['5.6'], 'normal', 2);
-      const techSoft = lineFromPrefixes('Tecnologia/Software', grouped, ['5.7', '5.8', '5.9'], 'normal', 2);
-      const material = lineFromPrefixes('Material de Escritório', grouped, ['5.10'], 'normal', 2);
-      const limpezaCopa = lineFromPrefixes('Limpeza/Copa', grouped, ['5.11', '5.13'], 'normal', 2);
-      const contabilidade = lineFromPrefixes('Contabilidade', grouped, ['5.12'], 'normal', 2);
-      const viagens = lineFromPrefixes('Viagens', grouped, ['5.15', '5.16', '5.17'], 'normal', 2);
-      const adminMonths = sumRows(aluguel, iptu, energia, agua, telefone, techSoft, material, limpezaCopa, contabilidade, viagens);
+      const aluguel = lineFromCodes('Aluguel', grouped, ['5.1'], 'normal', 2);
+      const condominio = lineFromCodes('Condomínio', grouped, ['5.2'], 'normal', 2);
+      const iptu = lineFromCodes('IPTU', grouped, ['5.3'], 'normal', 2);
+      const energia = lineFromCodes('Energia', grouped, ['5.4'], 'normal', 2);
+      const agua = lineFromCodes('Água', grouped, ['5.5'], 'normal', 2);
+      const telefone = lineFromCodes('Telefone/Internet', grouped, ['5.6'], 'normal', 2);
+      const software = lineFromCodes('Software Jurídico', grouped, ['5.7'], 'normal', 2);
+      const equipamentos = lineFromCodes('Equipamentos de TI', grouped, ['5.8'], 'normal', 2);
+      const correios = lineFromCodes('Correios/Cartório', grouped, ['5.9'], 'normal', 2);
+      const material = lineFromCodes('Material de Escritório', grouped, ['5.10'], 'normal', 2);
+      const limpezaCopa = lineFromCodes('Material Limpeza/Copa', grouped, ['5.11'], 'normal', 2);
+      const contabilidade = lineFromCodes('Contabilidade', grouped, ['5.12'], 'normal', 2);
+      const limpezaManut = lineFromCodes('Limpeza/Manutenção', grouped, ['5.13'], 'normal', 2);
+      const seguros = lineFromCodes('Seguros', grouped, ['5.14'], 'normal', 2);
+      const viagens = lineFromCodes('Viagens/Hospedagem', grouped, ['5.15', '5.16', '5.17'], 'normal', 2);
+      const adminMonths = sumRows(aluguel, condominio, iptu, energia, agua, telefone, software, equipamentos, correios, material, limpezaCopa, contabilidade, limpezaManut, seguros, viagens);
       const subtAdmin = makeRow('Subtotal Administrativas', adminMonths, 'subtotal');
 
       // 6.3 Comerciais
-      const marketing = lineFromPrefixes('Marketing', grouped, ['6.1'], 'normal', 2);
-      const siteRedes = lineFromPrefixes('Site/Redes Sociais', grouped, ['6.2'], 'normal', 2);
-      const eventos = lineFromPrefixes('Eventos', grouped, ['6.3'], 'normal', 2);
-      const cursosAss = lineFromPrefixes('Cursos/Assinaturas', grouped, ['6.4', '6.5'], 'normal', 2);
-      const comercialMonths = sumRows(marketing, siteRedes, eventos, cursosAss);
+      const marketing = lineFromCodes('Marketing', grouped, ['6.1'], 'normal', 2);
+      const siteRedes = lineFromCodes('Site/Redes Sociais', grouped, ['6.2'], 'normal', 2);
+      const eventos = lineFromCodes('Eventos', grouped, ['6.3'], 'normal', 2);
+      const cursos = lineFromCodes('Cursos e Capacitação', grouped, ['6.4'], 'normal', 2);
+      const assinaturas = lineFromCodes('Assinaturas', grouped, ['6.5'], 'normal', 2);
+      const comercialMonths = sumRows(marketing, siteRedes, eventos, cursos, assinaturas);
       const subtComercial = makeRow('Subtotal Comerciais', comercialMonths, 'subtotal');
 
       const totalDespOpMonths = sumRows(subtPessoal, subtAdmin, subtComercial);
@@ -168,12 +185,13 @@ export default function DREPage() {
       const pctMargemOp = percentRow('% Margem Operacional', ebitdaMonths, recBrutaMonths);
 
       // 8. DESPESAS FINANCEIRAS
-      const tarifas = lineFromPrefixes('Tarifas Bancárias', grouped, ['7.1'], 'normal', 1);
-      const juros = lineFromPrefixes('Juros', grouped, ['7.2'], 'normal', 1);
-      const taxasCartao = lineFromPrefixes('Taxas de Cartão', grouped, ['7.5'], 'normal', 1);
-      const multas = lineFromPrefixes('Multas', grouped, ['7.4'], 'normal', 1);
-      const recFinanceiras = lineFromPrefixes('(-) Receitas Financeiras', grouped, ['1.11'], 'normal', 1);
-      const despFinMonths = subtractRows(sumRows(tarifas, juros, taxasCartao, multas), recFinanceiras.months);
+      const tarifas = lineFromCodes('Tarifas Bancárias', grouped, ['7.1'], 'normal', 1);
+      const juros = lineFromCodes('Juros sobre Empréstimos', grouped, ['7.2'], 'normal', 1);
+      const iof = lineFromCodes('IOF', grouped, ['7.3'], 'normal', 1);
+      const multas = lineFromCodes('Multas', grouped, ['7.4'], 'normal', 1);
+      const taxasCartao = lineFromCodes('Taxas de Cartão', grouped, ['7.5'], 'normal', 1);
+      const recFinanceiras = lineFromCodes('(-) Receitas Financeiras', grouped, ['1.11'], 'normal', 1);
+      const despFinMonths = subtractRows(sumRows(tarifas, juros, iof, multas, taxasCartao), recFinanceiras.months);
       const subtDespFin = makeRow('SUBTOTAL DESPESAS FINANCEIRAS', despFinMonths, 'subtotal');
 
       // 9. RESULTADO ANTES DOS IMPOSTOS
@@ -181,9 +199,9 @@ export default function DREPage() {
       const totalResAntesImp = makeRow('RESULTADO ANTES DOS IMPOSTOS', resAntesImpMonths, 'total');
 
       // 10. IMPOSTOS SOBRE LUCRO
-      const irpj = lineFromPrefixes('IRPJ/DARF', grouped, ['8.1'], 'normal', 1);
-      const csll = lineFromPrefixes('CSLL', grouped, ['8.2'], 'normal', 1);
-      const simples = lineFromPrefixes('Simples Nacional', grouped, ['8.3'], 'normal', 1);
+      const irpj = lineFromCodes('IRPJ/DARF', grouped, ['8.1'], 'normal', 1);
+      const csll = lineFromCodes('CSLL', grouped, ['8.2'], 'normal', 1);
+      const simples = lineFromCodes('Simples Nacional', grouped, ['8.3'], 'normal', 1);
       const impostosMonths = sumRows(irpj, csll, simples);
       const subtImpostos = makeRow('SUBTOTAL IMPOSTOS', impostosMonths, 'subtotal');
 
@@ -193,19 +211,37 @@ export default function DREPage() {
       const totalResLiq = makeRow('RESULTADO LÍQUIDO', resLiqMonths, resLiqTotal >= 0 ? 'result-positive' : 'result-negative');
       const pctMargemLiq = percentRow('% Margem Líquida', resLiqMonths, recBrutaMonths);
 
+      // 12. DISTRIBUIÇÃO DE LUCROS
+      const distLucros = lineFromCodes('Distribuição de Lucros', grouped, ['9.1'], 'normal', 1);
+      const reservas = lineFromCodes('Reservas', grouped, ['9.2'], 'normal', 1);
+      const distMonths = sumRows(distLucros, reservas);
+      const subtDist = makeRow('SUBTOTAL DISTRIBUIÇÃO', distMonths, 'subtotal');
+
+      // 13. INVESTIMENTOS
+      const moveisEquip = lineFromCodes('Móveis e Equipamentos', grouped, ['10.1'], 'normal', 1);
+      const reformas = lineFromCodes('Reforma e Instalações', grouped, ['10.2'], 'normal', 1);
+      const techInvest = lineFromCodes('Investimentos em Tecnologia', grouped, ['10.3'], 'normal', 1);
+      const investMonths = sumRows(moveisEquip, reformas, techInvest);
+      const subtInvest = makeRow('SUBTOTAL INVESTIMENTOS', investMonths, 'subtotal');
+
+      // SALDO FINAL (Resultado Líquido - Distribuição - Investimentos)
+      const saldoFinalMonths = subtractRows(subtractRows(resLiqMonths, distMonths), investMonths);
+      const saldoFinalTotal = sumAllMonths(saldoFinalMonths);
+      const totalSaldoFinal = makeRow('SALDO FINAL', saldoFinalMonths, saldoFinalTotal >= 0 ? 'result-positive' : 'result-negative');
+
       setRows([
         makeRow('1. RECEITA BRUTA', [], 'section'),
-        honContratuais, honExito, honRecorrentes, consultorias, reembolsos, outrasRec,
+        honContratuais, honExito, honRecorrentes, consultorias, arbitragem, recuperacao, reembolsos, recJudiciais, outrasRec, rendaPatrimonial,
         subtRecBruta,
 
         makeRow('2. DEDUÇÕES DA RECEITA', [], 'section'),
-        iss, pis, cofins, irrf, descontos,
+        iss, pis, cofins, irrf, descontos, outrasDeducoes,
         subtDeducoes,
 
         totalRecLiq,
 
         makeRow('4. CUSTOS DIRETOS', [], 'section'),
-        custas, taxas, pericias, correspondentes, comissoes, terceirizados,
+        custas, taxas, pericias, diligencias, correspondentes, terceirizados, comissoes,
         subtCustDir,
 
         totalMargemContrib,
@@ -213,15 +249,15 @@ export default function DREPage() {
 
         makeRow('6. DESPESAS OPERACIONAIS', [], 'section'),
         makeRow('6.1 Pessoal', [], 'section'),
-        salarios, decTercFerias, fgtsInss, beneficios, estagiarios, proLabore,
+        salarios, decTerceiro, ferias, fgts, inss, valeTransporte, valeRefeicao, planoSaude, estagiarios, rescisoes, proLabore,
         subtPessoal,
 
         makeRow('6.2 Administrativas', [], 'section'),
-        aluguel, iptu, energia, agua, telefone, techSoft, material, limpezaCopa, contabilidade, viagens,
+        aluguel, condominio, iptu, energia, agua, telefone, software, equipamentos, correios, material, limpezaCopa, contabilidade, limpezaManut, seguros, viagens,
         subtAdmin,
 
         makeRow('6.3 Comerciais', [], 'section'),
-        marketing, siteRedes, eventos, cursosAss,
+        marketing, siteRedes, eventos, cursos, assinaturas,
         subtComercial,
 
         totalDespOp,
@@ -230,7 +266,7 @@ export default function DREPage() {
         pctMargemOp,
 
         makeRow('8. DESPESAS FINANCEIRAS', [], 'section'),
-        tarifas, juros, taxasCartao, multas, recFinanceiras,
+        tarifas, juros, iof, multas, taxasCartao, recFinanceiras,
         subtDespFin,
 
         totalResAntesImp,
@@ -241,6 +277,16 @@ export default function DREPage() {
 
         totalResLiq,
         pctMargemLiq,
+
+        makeRow('12. DISTRIBUIÇÃO DE LUCROS', [], 'section'),
+        distLucros, reservas,
+        subtDist,
+
+        makeRow('13. INVESTIMENTOS', [], 'section'),
+        moveisEquip, reformas, techInvest,
+        subtInvest,
+
+        totalSaldoFinal,
       ]);
 
       setLoading(false);
