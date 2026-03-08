@@ -14,6 +14,7 @@ import ContasPagarPage from "./pages/ContasPagarPage";
 import DREPage from "./pages/DREPage";
 import CadastrosPage from "./pages/CadastrosPage";
 import ImportacaoPage from "./pages/ImportacaoPage";
+import PlanilhasModeloPage from "./pages/PlanilhasModeloPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
@@ -45,6 +46,7 @@ const App = () => (
                   <Route path="/contas-receber" element={<ContasReceberPage />} />
                   <Route path="/contas-pagar" element={<ContasPagarPage />} />
                   <Route path="/importacao" element={<ImportacaoPage />} />
+                  <Route path="/planilhas-modelo" element={<PlanilhasModeloPage />} />
                   <Route path="/dre" element={<DREPage />} />
                   <Route path="/cadastros" element={<Navigate to="/cadastros/socios" replace />} />
                   <Route path="/cadastros/socios" element={<CadastrosPage />} />
