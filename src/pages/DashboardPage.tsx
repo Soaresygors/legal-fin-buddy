@@ -19,25 +19,6 @@ interface MonthlyData {
   despesas: number;
   resultado: number;
 }
-
-// Demo data from spec
-const DEMO_MONTHLY: MonthlyData[] = [
-  { month: 'Jan', receitas: 98200, despesas: 50700, resultado: 47500 },
-  { month: 'Fev', receitas: 87300, despesas: 47200, resultado: 40100 },
-  { month: 'Mar', receitas: 94500, despesas: 51600, resultado: 42900 },
-  { month: 'Abr', receitas: 108600, despesas: 57200, resultado: 51400 },
-  { month: 'Mai', receitas: 92100, despesas: 49800, resultado: 42300 },
-  { month: 'Jun', receitas: 101400, despesas: 53100, resultado: 48300 },
-];
-
-const DEMO_PIE = [
-  { name: 'Pessoal', value: 38 },
-  { name: 'Administrativo', value: 28 },
-  { name: 'Impostos', value: 15 },
-  { name: 'Operacional', value: 13 },
-  { name: 'Marketing', value: 6 },
-];
-
 const PIE_COLORS: Record<string, string> = {
   'Pessoal': '#1F3864',
   'Administrativo': '#2E75B6',
@@ -46,14 +27,6 @@ const PIE_COLORS: Record<string, string> = {
   'Marketing': '#a855f7',
   'Outros': '#94a3b8',
 };
-
-const DEMO_LANCAMENTOS = [
-  { id: 1, data: '2026-03-07', descricao: 'Honorários - Processo 2024/001', conta: 'Honorários Avulsos', valor: 15800, tipo: 'R', status: 'Pago' },
-  { id: 2, data: '2026-03-06', descricao: 'Aluguel Escritório - Março', conta: 'Aluguel', valor: 8500, tipo: 'D', status: 'Pago' },
-  { id: 3, data: '2026-03-05', descricao: 'Salários e Pró-labore', conta: 'Salários', valor: 22300, tipo: 'D', status: 'Pendente' },
-  { id: 4, data: '2026-03-04', descricao: 'Mensalidade Cliente XYZ Ltda', conta: 'Mensalidades', valor: 4500, tipo: 'R', status: 'Pago' },
-  { id: 5, data: '2026-03-03', descricao: 'Custas Processuais - Vara Cível', conta: 'Custas', valor: 1250, tipo: 'D', status: 'Vencido' },
-];
 
 const STATUS_BADGE: Record<string, string> = {
   Pago: 'bg-[#DCFCE7] text-[#166534]',
@@ -124,20 +97,10 @@ export default function DashboardPage() {
       const hasData = lancamentos && lancamentos.length > 0;
 
       if (!hasData) {
-        // Use demo data
-        setMonthlyData(DEMO_MONTHLY);
-        const totalRec = DEMO_MONTHLY.reduce((s, m) => s + m.receitas, 0);
-        const totalDesp = DEMO_MONTHLY.reduce((s, m) => s + m.despesas, 0);
-        const resultado = totalRec - totalDesp;
-        setKpis({
-          receitaTotal: totalRec,
-          despesaTotal: totalDesp,
-          resultado,
-          margem: totalRec > 0 ? (resultado / totalRec) * 100 : 0,
-          variacaoReceita: 8.2,
-        });
-        setDespesasPie(DEMO_PIE);
-        setUltimosLancamentos(DEMO_LANCAMENTOS);
+        setMonthlyData([]);
+        setKpis({ receitaTotal: 0, despesaTotal: 0, resultado: 0, margem: 0, variacaoReceita: null });
+        setDespesasPie([]);
+        setUltimosLancamentos([]);
         setLoading(false);
         return;
       }
@@ -218,7 +181,7 @@ export default function DashboardPage() {
           status: l.status,
         })));
       } else {
-        setUltimosLancamentos(DEMO_LANCAMENTOS);
+        setUltimosLancamentos([]);
       }
 
       setLoading(false);
