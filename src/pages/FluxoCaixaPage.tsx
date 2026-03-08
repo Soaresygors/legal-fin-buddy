@@ -1,132 +1,251 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useYear } from '@/contexts/YearContext';
 import { formatCurrency, getMonthName } from '@/lib/format';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-} from 'recharts';
 
-interface FluxoRow {
-  month: string;
-  entradas: number;
-  saidas: number;
-  saldo: number;
-  acumulado: number;
+type RowStyle = 'section' | 'subtotal' | 'total' | 'total-green' | 'total-red' | 'saldo-pos' | 'saldo-neg' | 'normal' | 'editable';
+
+interface FCRow {
+  label: string;
+  months: number[];
+  total: number;
+  style: RowStyle;
+  indent?: number;
+}
+
+function sumByPrefixes(grouped: Record<string, Record<number, number>>, prefixes: string[], month: number): number {
+  let sum = 0;
+  for (const code of Object.keys(grouped)) {
+    if (prefixes.some(p => code.startsWith(p))) sum += grouped[code][month] || 0;
+  }
+  return sum;
+}
+
+function sumAll(m: number[]): number { return m.reduce((a, b) => a + b, 0); }
+
+function makeRow(label: string, months: number[], style: RowStyle, indent?: number): FCRow {
+  return { label, months, total: sumAll(months), style, indent };
+}
+
+function lineFromPrefixes(label: string, grouped: Record<string, Record<number, number>>, prefixes: string[], indent?: number): FCRow {
+  const months = Array.from({ length: 12 }, (_, i) => sumByPrefixes(grouped, prefixes, i + 1));
+  return makeRow(label, months, 'normal', indent);
+}
+
+function sumRows(...rows: FCRow[]): number[] {
+  return Array.from({ length: 12 }, (_, i) => rows.reduce((s, r) => s + r.months[i], 0));
+}
+
+function subRows(a: number[], b: number[]): number[] {
+  return a.map((v, i) => v - b[i]);
 }
 
 export default function FluxoCaixaPage() {
   const { selectedYear } = useYear();
-  const [data, setData] = useState<FluxoRow[]>([]);
+  const [rows, setRows] = useState<FCRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saldoInicialJan, setSaldoInicialJan] = useState(82000);
+
+  const buildRows = useCallback((grouped: Record<string, Record<number, number>>, saldoInicial: number) => {
+    // ENTRADAS
+    const honCont = lineFromPrefixes('Honorários Contratuais', grouped, ['1.1'], 1);
+    const honExito = lineFromPrefixes('Honorários de Êxito', grouped, ['1.2'], 1);
+    const honRec = lineFromPrefixes('Honorários Recorrentes', grouped, ['1.3'], 1);
+    const consultorias = lineFromPrefixes('Consultorias', grouped, ['1.4'], 1);
+    const reembolsos = lineFromPrefixes('Reembolsos', grouped, ['1.7'], 1);
+    const recFin = lineFromPrefixes('Receitas Financeiras', grouped, ['1.11'], 1);
+    const outrasRec = lineFromPrefixes('Outras Receitas', grouped, ['1.9'], 1);
+    const entradasMonths = sumRows(honCont, honExito, honRec, consultorias, reembolsos, recFin, outrasRec);
+    const totalEntradas = makeRow('TOTAL DE ENTRADAS', entradasMonths, 'total-green');
+
+    // SAÍDAS
+    const impRec = lineFromPrefixes('Impostos s/ Receita', grouped, ['2.'], 1);
+    const custDir = lineFromPrefixes('Custos Diretos', grouped, ['3.'], 1);
+    const pessoal = lineFromPrefixes('Pessoal', grouped, ['4.'], 1);
+    const aluguelIptu = lineFromPrefixes('Aluguel + IPTU', grouped, ['5.1', '5.3'], 1);
+    const utilidades = lineFromPrefixes('Utilidades', grouped, ['5.4', '5.5', '5.6'], 1);
+    const tecnologia = lineFromPrefixes('Tecnologia', grouped, ['5.7', '5.8', '5.9'], 1);
+    const matServ = lineFromPrefixes('Materiais e Serviços', grouped, ['5.10', '5.11', '5.12', '5.13', '5.14'], 1);
+    const mktCom = lineFromPrefixes('Marketing/Comercial', grouped, ['6.'], 1);
+    const despFin = lineFromPrefixes('Despesas Financeiras', grouped, ['7.'], 1);
+    const impLucro = lineFromPrefixes('Impostos s/ Lucro', grouped, ['8.'], 1);
+    const investCapex = lineFromPrefixes('Investimentos/CAPEX', grouped, ['10.'], 1);
+    const distLucros = lineFromPrefixes('Distribuição Lucros', grouped, ['9.'], 1);
+    const saidasMonths = sumRows(impRec, custDir, pessoal, aluguelIptu, utilidades, tecnologia, matServ, mktCom, despFin, impLucro, investCapex, distLucros);
+    const totalSaidas = makeRow('TOTAL DE SAÍDAS', saidasMonths, 'total-red');
+
+    // SALDO OPERACIONAL
+    const saldoOpMonths = subRows(entradasMonths, saidasMonths);
+    const totalSaldoOp = makeRow('SALDO OPERACIONAL', saldoOpMonths, 'total');
+
+    // SALDO INICIAL / FINAL
+    const saldoInicialMonths: number[] = [saldoInicial];
+    const saldoFinalMonths: number[] = [];
+    for (let i = 0; i < 12; i++) {
+      saldoFinalMonths[i] = saldoInicialMonths[i] + saldoOpMonths[i];
+      if (i < 11) saldoInicialMonths[i + 1] = saldoFinalMonths[i];
+    }
+
+    const saldoInicialRow: FCRow = { label: 'Saldo Inicial do Período', months: saldoInicialMonths, total: saldoInicialMonths[0], style: 'editable' };
+    const saldoFinalTotal = saldoFinalMonths[11];
+    const saldoFinalRow = makeRow('SALDO FINAL', saldoFinalMonths, saldoFinalTotal >= 0 ? 'saldo-pos' : 'saldo-neg');
+
+    setRows([
+      makeRow('SALDO INICIAL', [], 'section'),
+      saldoInicialRow,
+
+      makeRow('ENTRADAS (RECEITAS)', [], 'section'),
+      honCont, honExito, honRec, consultorias, reembolsos, recFin, outrasRec,
+      totalEntradas,
+
+      makeRow('SAÍDAS (DESPESAS)', [], 'section'),
+      impRec, custDir, pessoal, aluguelIptu, utilidades, tecnologia, matServ, mktCom, despFin, impLucro, investCapex, distLucros,
+      totalSaidas,
+
+      totalSaldoOp,
+      saldoFinalRow,
+    ]);
+  }, []);
+
+  const [grouped, setGrouped] = useState<Record<string, Record<number, number>>>({});
 
   useEffect(() => {
     async function load() {
       setLoading(true);
-      const { data: lancamentos } = await supabase
+      const { data } = await supabase
         .from('lancamentos')
-        .select('competencia, tipo, valor_realizado, status')
+        .select('valor_realizado, competencia, plano_contas!inner(codigo)')
         .gte('competencia', `${selectedYear}-01-01`)
-        .lte('competencia', `${selectedYear}-12-31`)
-        .eq('status', 'Pago');
+        .lte('competencia', `${selectedYear}-12-31`);
 
-      if (!lancamentos) { setLoading(false); return; }
-
-      const monthly: Record<number, { entradas: number; saidas: number }> = {};
-      for (let i = 0; i < 12; i++) monthly[i] = { entradas: 0, saidas: 0 };
-
-      lancamentos.forEach((l: any) => {
-        const m = new Date(l.competencia).getMonth();
+      const g: Record<string, Record<number, number>> = {};
+      (data || []).forEach((l: any) => {
+        const code = l.plano_contas?.codigo || '';
+        const month = new Date(l.competencia + 'T00:00:00').getMonth() + 1;
         const val = Number(l.valor_realizado) || 0;
-        if (l.tipo === 'R') monthly[m].entradas += val;
-        else monthly[m].saidas += val;
+        if (!g[code]) g[code] = {};
+        g[code][month] = (g[code][month] || 0) + val;
       });
 
-      let acumulado = 82000; // saldo inicial (soma dos saldos bancários)
-      const rows: FluxoRow[] = [];
-      for (let i = 0; i < 12; i++) {
-        const { entradas, saidas } = monthly[i];
-        if (entradas === 0 && saidas === 0 && rows.length === 0) continue;
-        const saldo = entradas - saidas;
-        acumulado += saldo;
-        rows.push({ month: getMonthName(i), entradas, saidas, saldo, acumulado });
-        if (entradas === 0 && saidas === 0 && rows.length > 0) break;
-      }
-
-      setData(rows);
+      setGrouped(g);
+      buildRows(g, saldoInicialJan);
       setLoading(false);
     }
     load();
-  }, [selectedYear]);
+  }, [selectedYear, buildRows, saldoInicialJan]);
 
-  const totalEntradas = data.reduce((s, r) => s + r.entradas, 0);
-  const totalSaidas = data.reduce((s, r) => s + r.saidas, 0);
+  useEffect(() => {
+    if (Object.keys(grouped).length > 0) {
+      buildRows(grouped, saldoInicialJan);
+    }
+  }, [saldoInicialJan, grouped, buildRows]);
+
+  const rowClasses: Record<RowStyle, string> = {
+    section: 'bg-muted font-bold text-foreground',
+    subtotal: 'bg-muted/70 font-bold',
+    total: 'bg-slate-800 text-white font-bold border-y-2 border-slate-900',
+    'total-green': 'bg-emerald-100 text-emerald-800 font-bold border-y border-emerald-300',
+    'total-red': 'bg-rose-100 text-rose-800 font-bold border-y border-rose-300',
+    'saldo-pos': 'bg-emerald-100 text-emerald-700 font-bold border-y-2 border-emerald-400',
+    'saldo-neg': 'bg-rose-100 text-rose-700 font-bold border-y-2 border-rose-400',
+    normal: '',
+    editable: 'bg-blue-50 text-blue-700 font-semibold',
+  };
+
+  function formatVal(val: number): string {
+    if (val === 0) return '—';
+    return formatCurrency(val);
+  }
+
+  function handleSaldoChange(raw: string) {
+    const cleaned = raw.replace(/[^\d,-]/g, '').replace(',', '.');
+    const num = parseFloat(cleaned);
+    if (!isNaN(num)) setSaldoInicialJan(num);
+    else if (raw === '') setSaldoInicialJan(0);
+  }
 
   return (
     <div className="space-y-4 animate-fade-in">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Total Entradas</CardTitle></CardHeader>
-          <CardContent><div className="text-2xl font-bold text-success">{formatCurrency(totalEntradas)}</div></CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Total Saídas</CardTitle></CardHeader>
-          <CardContent><div className="text-2xl font-bold text-destructive">{formatCurrency(totalSaidas)}</div></CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Saldo Acumulado</CardTitle></CardHeader>
-          <CardContent><div className="text-2xl font-bold text-primary">{formatCurrency(data[data.length - 1]?.acumulado || 82000)}</div></CardContent>
-        </Card>
-      </div>
-
       <Card>
-        <CardHeader><CardTitle className="text-base">Fluxo de Caixa {selectedYear}</CardTitle></CardHeader>
-        <CardContent>
+        <CardHeader>
+          <CardTitle className="text-base">Fluxo de Caixa — {selectedYear}</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
           {loading ? (
-            <div className="text-center py-8 text-muted-foreground">Carregando...</div>
+            <div className="text-center py-12 text-muted-foreground">Carregando...</div>
           ) : (
-            <ResponsiveContainer width="100%" height={350}>
-              <AreaChart data={data}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="month" fontSize={12} />
-                <YAxis fontSize={12} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-                <Tooltip formatter={(v: number) => formatCurrency(v)} />
-                <Area type="monotone" dataKey="acumulado" name="Saldo Acumulado" stroke="hsl(var(--chart-1))" fill="hsl(var(--chart-1))" fillOpacity={0.1} />
-                <Area type="monotone" dataKey="entradas" name="Entradas" stroke="hsl(var(--chart-receita))" fill="hsl(var(--chart-receita))" fillOpacity={0.1} />
-                <Area type="monotone" dataKey="saidas" name="Saídas" stroke="hsl(var(--chart-despesa))" fill="hsl(var(--chart-despesa))" fillOpacity={0.1} />
-              </AreaChart>
-            </ResponsiveContainer>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader><CardTitle className="text-base">Detalhamento Mensal</CardTitle></CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left py-3 px-2 font-medium text-muted-foreground">Mês</th>
-                  <th className="text-right py-3 px-2 font-medium text-muted-foreground">Entradas</th>
-                  <th className="text-right py-3 px-2 font-medium text-muted-foreground">Saídas</th>
-                  <th className="text-right py-3 px-2 font-medium text-muted-foreground">Saldo</th>
-                  <th className="text-right py-3 px-2 font-medium text-muted-foreground">Acumulado</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.map((r) => (
-                  <tr key={r.month} className="border-b border-border/50">
-                    <td className="py-2.5 px-2 font-medium">{r.month}</td>
-                    <td className="py-2.5 px-2 text-right text-success">{formatCurrency(r.entradas)}</td>
-                    <td className="py-2.5 px-2 text-right text-destructive">{formatCurrency(r.saidas)}</td>
-                    <td className={`py-2.5 px-2 text-right font-medium ${r.saldo >= 0 ? 'text-success' : 'text-destructive'}`}>{formatCurrency(r.saldo)}</td>
-                    <td className="py-2.5 px-2 text-right font-medium">{formatCurrency(r.acumulado)}</td>
+            <div className="overflow-auto max-h-[75vh]">
+              <table className="w-full text-xs border-collapse">
+                <thead className="sticky top-0 z-10">
+                  <tr className="bg-slate-900 text-white">
+                    <th className="sticky left-0 z-20 bg-slate-900 min-w-[260px] text-left px-3 py-2 font-semibold">Descrição</th>
+                    {Array.from({ length: 12 }, (_, i) => (
+                      <th key={i} className="text-right px-2 py-2 font-semibold min-w-[90px]">{getMonthName(i)}</th>
+                    ))}
+                    <th className="text-right px-3 py-2 font-semibold min-w-[100px] bg-slate-950">Total Ano</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {rows.map((row, idx) => {
+                    const isSection = row.style === 'section';
+                    const cls = rowClasses[row.style];
+                    const isEven = idx % 2 === 0;
+                    const baseBg = row.style === 'normal' ? (isEven ? 'bg-background' : 'bg-muted/30') : '';
+
+                    return (
+                      <tr key={idx} className={`${cls} ${baseBg} border-b border-border/20`}>
+                        <td
+                          className={`sticky left-0 z-[5] px-3 py-1.5 whitespace-nowrap ${cls} ${baseBg}`}
+                          style={{ paddingLeft: row.indent ? `${row.indent * 16 + 12}px` : undefined }}
+                        >
+                          {row.label}
+                        </td>
+                        {isSection ? (
+                          Array.from({ length: 13 }, (_, i) => <td key={i} className="px-2 py-1.5" />)
+                        ) : (
+                          <>
+                            {row.months.map((v, i) => (
+                              <td
+                                key={i}
+                                className={`text-right px-2 py-1.5 font-mono tabular-nums ${
+                                  v < 0 ? 'text-destructive' : ''
+                                } ${row.style === 'total' && v < 0 ? 'text-red-300' : ''}`}
+                              >
+                                {row.style === 'editable' && i === 0 ? (
+                                  <input
+                                    type="text"
+                                    className="w-full text-right bg-blue-50 border border-blue-300 rounded px-1 py-0.5 text-blue-700 font-mono text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
+                                    defaultValue={formatCurrency(v)}
+                                    onBlur={(e) => handleSaldoChange(e.target.value)}
+                                  />
+                                ) : (
+                                  formatVal(v)
+                                )}
+                              </td>
+                            ))}
+                            <td
+                              className={`text-right px-3 py-1.5 font-mono tabular-nums font-semibold ${
+                                row.style === 'total' ? 'bg-slate-950' : 'bg-muted/50'
+                              } ${row.style === 'saldo-pos' ? 'bg-emerald-200' : ''} ${
+                                row.style === 'saldo-neg' ? 'bg-rose-200' : ''
+                              } ${row.style === 'total-green' ? 'bg-emerald-200' : ''} ${
+                                row.style === 'total-red' ? 'bg-rose-200' : ''
+                              } ${row.total < 0 ? 'text-destructive' : ''} ${
+                                row.style === 'total' && row.total < 0 ? 'text-red-300' : ''
+                              }`}
+                            >
+                              {formatVal(row.total)}
+                            </td>
+                          </>
+                        )}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
