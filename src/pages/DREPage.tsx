@@ -16,15 +16,15 @@ interface DRERow {
   indent?: number;
 }
 
-// Helper: sum values for codes matching any of the prefixes
-function sumByPrefixes(
+// Helper: sum values for exact code matches
+function sumByCodes(
   grouped: Record<string, Record<number, number>>,
-  prefixes: string[],
+  codes: string[],
   month: number
 ): number {
   let sum = 0;
   for (const code of Object.keys(grouped)) {
-    if (prefixes.some(p => code.startsWith(p))) {
+    if (codes.includes(code)) {
       sum += grouped[code][month] || 0;
     }
   }
