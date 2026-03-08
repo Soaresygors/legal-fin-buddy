@@ -8,24 +8,22 @@ const pageTitles: Record<string, string> = {
   '/lancamentos': 'Lançamentos',
   '/contas-receber': 'Contas a Receber',
   '/contas-pagar': 'Contas a Pagar',
-  '/fluxo-caixa': 'Fluxo de Caixa',
+  '/importacao': 'Importação',
   '/dre': 'DRE - Demonstrativo de Resultados',
-  '/indicadores': 'Indicadores',
+  '/cadastros/socios': 'Cadastros',
   '/cadastros/clientes': 'Cadastros',
   '/cadastros/plano-contas': 'Cadastros',
   '/cadastros/centros-custo': 'Cadastros',
-  '/cadastros/socios': 'Cadastros',
   '/cadastros/contas-bancarias': 'Cadastros',
-  '/configuracoes': 'Configurações',
 };
 
 export function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
-  const title = pageTitles[location.pathname] || 'P&B Advogadas';
+  const title = pageTitles[location.pathname] || 'P&B Finanças';
 
   return (
-    <div className="flex min-h-screen w-full">
+    <div className="flex min-h-screen w-full bg-[#F8FAFC]">
       <AppSidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
       <div className="flex-1 flex flex-col min-h-screen">
         <AppHeader title={title} onMenuClick={() => setSidebarOpen(!sidebarOpen)} />

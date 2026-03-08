@@ -79,11 +79,12 @@ interface CentroCusto { id: string; codigo: string | null; nome: string; }
 interface ContaBancaria { id: string; banco: string; agencia: string | null; conta: string | null; }
 
 const STATUS_COLORS: Record<string, string> = {
-  Pago: 'bg-success/10 text-success border-success/20',
-  Pendente: 'bg-warning/10 text-warning border-warning/20',
-  Parcial: 'bg-chart-3/10 text-chart-3 border-chart-3/20',
-  Cancelado: 'bg-muted text-muted-foreground border-border',
-  Vencido: 'bg-destructive/10 text-destructive border-destructive/20',
+  Pago: 'bg-[#DCFCE7] text-[#166534] border-[#bbf7d0]',
+  Pendente: 'bg-[#FEF9C3] text-[#854D0E] border-[#fef08a]',
+  'A vencer': 'bg-[#DBEAFE] text-[#1E40AF] border-[#bfdbfe]',
+  Parcial: 'bg-orange-100 text-orange-700 border-orange-200',
+  Cancelado: 'bg-[#F3F4F6] text-[#6B7280] border-[#e5e7eb]',
+  Vencido: 'bg-[#FEE2E2] text-[#991B1B] border-[#fecaca]',
 };
 
 const AREAS_JURIDICAS = [
@@ -96,7 +97,7 @@ const FORMAS_PAGAMENTO = [
   'Cheque', 'Dinheiro', 'DAS', 'Débito Automático', 'DARF', 'Outros',
 ];
 
-const STATUSES = ['Pago', 'Pendente', 'Parcial', 'Cancelado', 'Vencido'];
+const STATUSES = ['Pago', 'Pendente', 'A vencer', 'Parcial', 'Vencido', 'Cancelado'];
 
 const PAGE_SIZE = 25;
 

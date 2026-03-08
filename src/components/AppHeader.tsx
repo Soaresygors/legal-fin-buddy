@@ -1,7 +1,6 @@
-import { Menu, User, LogOut, KeyRound } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Menu, Bell } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 import { useYear } from '@/contexts/YearContext';
-import { useAuth } from '@/contexts/AuthContext';
 import {
   Select,
   SelectContent,
@@ -9,14 +8,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { toast } from '@/hooks/use-toast';
+import { useState } from 'react';
+
+const breadcrumbMap: Record<string, string[]> = {
+  '/': ['Dashboard'],
+  '/lancamentos': ['Lançamentos'],
+  '/contas-receber': ['Contas a Receber'],
+  '/contas-pagar': ['Contas a Pagar'],
+  '/importacao': ['Importação'],
+  '/dre': ['DRE'],
+  '/cadastros/socios': ['Cadastros', 'Sócios'],
+  '/cadastros/clientes': ['Cadastros', 'Clientes'],
+  '/cadastros/contas-bancarias': ['Cadastros', 'Contas Bancárias'],
+  '/cadastros/centros-custo': ['Cadastros', 'Centros de Custo'],
+  '/cadastros/plano-contas': ['Cadastros', 'Plano de Contas'],
+};
 
 interface AppHeaderProps {
   title: string;
@@ -25,21 +31,13 @@ interface AppHeaderProps {
 
 export function AppHeader({ title, onMenuClick }: AppHeaderProps) {
   const { selectedYear, setSelectedYear } = useYear();
-  const { profile, signOut } = useAuth();
-  const navigate = useNavigate();
+  const location = useLocation();
+  const [notificationCount] = useState(3);
 
-  const initials = profile?.nome
-    ? profile.nome.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
-    : '?';
-
-  const handleSignOut = async () => {
-    await signOut();
-    toast({ title: 'Você saiu do sistema' });
-    navigate('/login', { replace: true });
-  };
+  const crumbs = breadcrumbMap[location.pathname] || [title];
 
   return (
-    <header className="h-14 border-b border-border bg-card flex items-center justify-between px-4 lg:px-6 shrink-0">
+    <header className="h-14 border-b border-border bg-white flex items-center justify-between px-4 lg:px-6 shrink-0 sticky top-0 z-30">
       <div className="flex items-center gap-3">
         <button
           onClick={onMenuClick}
@@ -47,10 +45,30 @@ export function AppHeader({ title, onMenuClick }: AppHeaderProps) {
         >
           <Menu className="h-5 w-5" />
         </button>
-        <h1 className="text-lg font-semibold text-foreground">{title}</h1>
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-1.5 text-sm">
+          {crumbs.map((crumb, i) => (
+            <span key={i} className="flex items-center gap-1.5">
+              {i > 0 && <span className="text-muted-foreground">/</span>}
+              <span className={i === crumbs.length - 1 ? 'font-semibold text-[#1F3864]' : 'text-muted-foreground'}>
+                {crumb}
+              </span>
+            </span>
+          ))}
+        </nav>
       </div>
 
       <div className="flex items-center gap-3">
+        {/* Notification bell */}
+        <button className="relative text-muted-foreground hover:text-foreground transition-colors">
+          <Bell className="h-5 w-5" />
+          {notificationCount > 0 && (
+            <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
+              {notificationCount}
+            </span>
+          )}
+        </button>
+
         <Select
           value={String(selectedYear)}
           onValueChange={(v) => setSelectedYear(Number(v))}
@@ -66,31 +84,6 @@ export function AppHeader({ title, onMenuClick }: AppHeaderProps) {
             ))}
           </SelectContent>
         </Select>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold focus:outline-none focus:ring-2 focus:ring-ring">
-              {initials}
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <div className="px-3 py-2">
-              <p className="text-sm font-medium text-foreground">{profile?.nome || 'Usuário'}</p>
-              <p className="text-xs text-muted-foreground">{profile?.email}</p>
-            </div>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <User className="mr-2 h-4 w-4" /> Meu Perfil
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <KeyRound className="mr-2 h-4 w-4" /> Alterar Senha
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
-              <LogOut className="mr-2 h-4 w-4" /> Sair
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
     </header>
   );

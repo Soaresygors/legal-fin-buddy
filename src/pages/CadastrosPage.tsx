@@ -23,11 +23,11 @@ import { Plus, Pencil, Trash2, FileText, Search } from 'lucide-react';
 const AREAS = ['Cível', 'Trabalhista', 'Tributário', 'Empresarial', 'Família e Sucessões', 'Criminal', 'Imobiliário', 'Consumidor', 'Previdenciário'];
 
 const tabMap: Record<string, string> = {
-  '/cadastros/clientes': 'clientes',
-  '/cadastros/plano-contas': 'plano-contas',
-  '/cadastros/centros-custo': 'centros-custo',
   '/cadastros/socios': 'socios',
+  '/cadastros/clientes': 'clientes',
   '/cadastros/contas-bancarias': 'contas-bancarias',
+  '/cadastros/centros-custo': 'centros-custo',
+  '/cadastros/plano-contas': 'plano-contas',
 };
 
 function EmptyState({ label, onAdd }: { label: string; onAdd: () => void }) {
@@ -599,10 +599,10 @@ function ContasBancariasTab() {
 export default function CadastrosPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const currentTab = tabMap[location.pathname] || 'clientes';
+  const currentTab = tabMap[location.pathname] || 'socios';
 
   function handleTabChange(tab: string) {
-    const path = Object.entries(tabMap).find(([_, v]) => v === tab)?.[0] || '/cadastros/clientes';
+    const path = Object.entries(tabMap).find(([_, v]) => v === tab)?.[0] || '/cadastros/socios';
     navigate(path);
   }
 
@@ -612,18 +612,18 @@ export default function CadastrosPage() {
         <CardContent className="p-4">
           <Tabs value={currentTab} onValueChange={handleTabChange}>
             <TabsList className="w-full justify-start flex-wrap h-auto gap-1">
-              <TabsTrigger value="clientes">Clientes</TabsTrigger>
-              <TabsTrigger value="plano-contas">Plano de Contas</TabsTrigger>
-              <TabsTrigger value="centros-custo">Centros de Custo</TabsTrigger>
               <TabsTrigger value="socios">Sócios</TabsTrigger>
+              <TabsTrigger value="clientes">Clientes</TabsTrigger>
               <TabsTrigger value="contas-bancarias">Contas Bancárias</TabsTrigger>
+              <TabsTrigger value="centros-custo">Centros de Custo</TabsTrigger>
+              <TabsTrigger value="plano-contas">Plano de Contas</TabsTrigger>
             </TabsList>
             <div className="mt-4">
-              <TabsContent value="clientes"><ClientesTab /></TabsContent>
-              <TabsContent value="plano-contas"><PlanoContasTab /></TabsContent>
-              <TabsContent value="centros-custo"><CentrosCustoTab /></TabsContent>
               <TabsContent value="socios"><SociosTab /></TabsContent>
+              <TabsContent value="clientes"><ClientesTab /></TabsContent>
               <TabsContent value="contas-bancarias"><ContasBancariasTab /></TabsContent>
+              <TabsContent value="centros-custo"><CentrosCustoTab /></TabsContent>
+              <TabsContent value="plano-contas"><PlanoContasTab /></TabsContent>
             </div>
           </Tabs>
         </CardContent>
