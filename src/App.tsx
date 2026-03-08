@@ -40,21 +40,23 @@ const App = () => (
               <Route path="/redefinir-senha" element={<ResetPasswordPage />} />
 
               {/* Protected routes */}
-              <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-                <Route path="/" element={<DashboardPage />} />
-                <Route path="/lancamentos" element={<LancamentosPage />} />
-                <Route path="/contas-receber" element={<ContasReceberPage />} />
-                <Route path="/contas-pagar" element={<ContasPagarPage />} />
-                <Route path="/fluxo-caixa" element={<FluxoCaixaPage />} />
-                <Route path="/dre" element={<DREPage />} />
-                <Route path="/indicadores" element={<IndicadoresPage />} />
-                <Route path="/cadastros" element={<Navigate to="/cadastros/clientes" replace />} />
-                <Route path="/cadastros/clientes" element={<CadastrosPage />} />
-                <Route path="/cadastros/plano-contas" element={<CadastrosPage />} />
-                <Route path="/cadastros/centros-custo" element={<CadastrosPage />} />
-                <Route path="/cadastros/socios" element={<CadastrosPage />} />
-                <Route path="/cadastros/contas-bancarias" element={<CadastrosPage />} />
-                <Route path="/configuracoes" element={<ConfiguracoesPage />} />
+              <Route element={<ProtectedRoute />}>
+                <Route element={<AppLayout />}>
+                  <Route path="/" element={<DashboardPage />} />
+                  <Route path="/lancamentos" element={<LancamentosPage />} />
+                  <Route path="/contas-receber" element={<ContasReceberPage />} />
+                  <Route path="/contas-pagar" element={<ContasPagarPage />} />
+                  <Route path="/fluxo-caixa" element={<FluxoCaixaPage />} />
+                  <Route path="/dre" element={<DREPage />} />
+                  <Route path="/indicadores" element={<IndicadoresPage />} />
+                  <Route path="/cadastros" element={<Navigate to="/cadastros/clientes" replace />} />
+                  <Route path="/cadastros/clientes" element={<CadastrosPage />} />
+                  <Route path="/cadastros/plano-contas" element={<CadastrosPage />} />
+                  <Route path="/cadastros/centros-custo" element={<CadastrosPage />} />
+                  <Route path="/cadastros/socios" element={<CadastrosPage />} />
+                  <Route path="/cadastros/contas-bancarias" element={<CadastrosPage />} />
+                  <Route path="/configuracoes" element={<ConfiguracoesPage />} />
+                </Route>
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
