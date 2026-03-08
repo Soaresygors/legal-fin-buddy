@@ -530,7 +530,17 @@ export default function LancamentosPage() {
                           <span className="truncate">{(l.plano_contas?.descricao || '').slice(0, 30)}</span>
                         </td>
                         <td className="py-2.5 px-3">{l.clientes?.nome || '—'}</td>
-                        <td className="py-2.5 px-3 max-w-[200px] truncate">{l.descricao}</td>
+                        <td className="py-2.5 px-3 max-w-[200px] truncate">
+                          {l.descricao}
+                          {l.observacoes === 'Migrado da planilha' && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Info className="inline-block h-3.5 w-3.5 ml-1.5 text-muted-foreground/60 cursor-help" />
+                              </TooltipTrigger>
+                              <TooltipContent>Migrado da planilha</TooltipContent>
+                            </Tooltip>
+                          )}
+                        </td>
                         <td className={cn('py-2.5 px-3 text-right font-medium whitespace-nowrap', l.tipo === 'R' ? 'text-success' : 'text-destructive')}>
                           {formatCurrency(l.valor_realizado)}
                         </td>
